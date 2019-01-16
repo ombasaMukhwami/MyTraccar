@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>
+
+<properties>
+
+    <entry key='config.default'>./conf/default.xml</entry>
+
+    <entry key="database.driver">com.microsoft.sqlserver.jdbc.SQLServerDriver</entry>
+    <entry key="database.url">jdbc:sqlserver://41.57.106.66;user=webapplication;password=W3b4ppl1c4t10nL0g!n;databaseName=traccar;</entry>
+    <entry key="database.user">webapplication</entry>
+    <entry key="database.password">W3b4ppl1c4t10nL0g!n</entry>
+</properties>

@@ -1,0 +1,288 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>
+
+<properties>
+
+    <!--
+
+    DO NOT MODIFY THIS FILE. Use traccar.xml instead.
+
+    -->
+    <!-- SERVER CONFIG -->
+    <entry key='server.timeout'>360</entry><!-- TCP CONNECTION TIME OUT in SECS-->
+    <entry key='distance.enable'>true</entry>
+    <entry key='processing.copyAttributes.enable'>true</entry>
+    <entry key='processing.copyAttributes'>power,ignition,battery,odometer</entry>
+    <entry key='processing.computedAttributes.enable'>true</entry>
+    <entry key='processing.engineHours.enable'>true</entry>
+    <entry key='media.path'>./media</entry>
+    <entry key='commands.queueing'>true</entry>
+    <!-- =========NOTIFICATION TYPES=============== -->
+    <entry key='notificator.types'>web,mail</entry>
+    <!-- =========WEB CONFIG=============== -->
+    <entry key='web.enable'>true</entry>
+    <entry key='web.port'>8082</entry>
+    <entry key='web.path'>./web</entry>
+    <entry key='web.cacheControl'>max-age=3600,public</entry>
+    <!-- ======GEOCODERS=========== -->
+    <entry key='geocoder.enable'>false</entry>
+    <entry key='geocoder.enable'>false</entry>
+    <entry key='geocoder.type'>google</entry>
+    <!-- ======LOGGINGS=========== -->
+    <entry key='logger.console'>true</entry>
+    <entry key='logger.enable'>true</entry>
+    <entry key='logger.level'>all</entry>
+    <entry key='logger.file'>./logs/tracker-server.log</entry>
+    <!-- ======================== -->
+    <entry key='gt06.alternative'>true</entry>
+    <entry key='gt06.timezone'>0</entry>
+    <!-- ======FILTERS=========== -->
+    <entry key='filter.enable'>true</entry>
+    <entry key='filter.future'>86400</entry>
+    <entry key='filter.zero'>true</entry>
+    <!-- ==========FORWARDING==== -->
+    <entry key='event.enable'>true</entry>
+    <entry key='event.forward.enable'>true</entry>
+    <entry key='event.forward.url'>http://127.0.0.1:8080</entry>
+    <entry key='event.ignoreDuplicateAlerts'>true</entry>
+    <entry key='forward.json'>true</entry>
+    <entry key='forward.enable'>true</entry>
+    <entry key='forward.url'>http://127.0.0.1:8080/?id={uniqueId}&amp;deviceId={deviceId}&amp;valid={valid}&amp;fixTime={fixTime}&amp;deviceTime={deviceTime}&amp;protocol={protocol}&amp;latitude={latitude}&amp;longitude={longitude}&amp;altitude={altitude}&amp;speed={speed}&amp;course={course}&amp;statusCode={statusCode}&amp;attributes={attributes}</entry>
+    <!-- DATABASE CONFIG -->
+    <entry key='database.ignoreUnknown'>false</entry>
+    <entry key='database.registerUnknown'>true</entry>
+    <entry key='database.generateQueries'>true</entry>
+    <entry key='database.saveOriginal'>true</entry> <!--Boolean flag to save original message from device in HEX format in position attributes.-->
+    <entry key='database.changelog'>./schema/changelog-master.xml</entry>
+    <entry key='database.loginUser'>
+
+        SELECT * FROM tc_users
+        WHERE email = :email OR login = :email
+    </entry>
+
+    <entry key='database.selectPositions'>
+        SELECT * FROM tc_positions WHERE deviceId = :deviceId AND fixTime BETWEEN :from AND :to ORDER BY fixTime
+    </entry>
+
+    <entry key='database.selectLatestPositions'>
+        SELECT tc_positions.* FROM tc_positions INNER JOIN tc_devices ON tc_positions.id = tc_devices.positionid;
+    </entry>
+
+    <entry key='database.updateLatestPosition'>
+        UPDATE tc_devices SET positionId = :id WHERE id = :deviceId
+    </entry>
+
+    <entry key='database.selectEvents'>
+        SELECT * FROM tc_events WHERE deviceId = :deviceId AND serverTime BETWEEN :from AND :to ORDER BY serverTime
+    </entry>
+
+    <entry key='database.deletePositions'>
+        DELETE FROM tc_positions WHERE serverTime &lt; :serverTime AND id NOT IN (SELECT positionId FROM tc_devices WHERE positionId IS NOT NULL)
+    </entry>
+
+    <entry key='database.deleteEvents'>
+        DELETE FROM tc_events WHERE serverTime &lt; :serverTime
+    </entry>
+
+    <entry key='database.selectStatistics'>
+        SELECT * FROM tc_statistics WHERE captureTime BETWEEN :from AND :to ORDER BY captureTime
+    </entry>
+
+    <!-- Navigate -->
+    <entry key='tr11.port'>8992</entry>
+    <entry key='sinotrack.port'>3299</entry>
+    <entry key='queclink.port'>13979</entry>
+    <!-- 3.xx -->
+    <entry key='gps103.port'>9001</entry>
+    <entry key='tk103.port'>9002</entry>
+    <entry key='gl100.port'>9003</entry>
+    <entry key='gl200.port'>9004</entry>
+    <entry key='t55.port'>9005</entry>
+    <entry key='xexun.port'>9006</entry>
+    <entry key='xexun.extended'>false</entry>
+    <entry key='totem.port'>9007</entry>
+    <entry key='enfora.port'>9008</entry>
+    <entry key='meiligao.port'>9009</entry>
+    <entry key='trv.port'>9010</entry>
+    <entry key='suntech.port'>9011</entry>
+    <entry key='progress.port'>9012</entry>
+    <entry key='h02.port'>9013</entry>
+    <entry key='jt600.port'>9014</entry>
+
+    <entry key='huabao.port'>7005</entry>
+
+    <entry key='v680.port'>9016</entry>
+    <entry key='pt502.port'>9017</entry>
+    <entry key='tr20.port'>9018</entry>
+    <entry key='navis.port'>9019</entry>
+    <entry key='meitrack.port'>9020</entry>
+    <entry key='skypatrol.port'>9021</entry>
+    <entry key='gt02.port'>9022</entry>
+
+    <entry key='gt06.port'>11001</entry>
+
+    <entry key='megastek.port'>9024</entry>
+    <entry key='navigil.port'>9025</entry>
+    <entry key='gpsgate.port'>9026</entry>
+
+    <entry key='teltonika.port'>12070</entry>
+
+    <entry key='mta6.port'>9028</entry>
+    <entry key='tzone.port'>9029</entry>
+    <entry key='tlt2h.port'>9030</entry>
+    <entry key='taip.port'>9031</entry>
+    <entry key='wondex.port'>9032</entry>
+    <entry key='cellocator.port'>9033</entry>
+    <entry key='galileo.port'>9034</entry>
+    <entry key='ywt.port'>9035</entry>
+    <entry key='tk102.port'>9036</entry>
+    <entry key='intellitrac.port'>9037</entry>
+    <entry key='gpsmta.port'>9038</entry>
+    <entry key='wialon.port'>9039</entry>
+    <entry key='carscop.port'>9040</entry>
+    <entry key='apel.port'>9041</entry>
+    <entry key='manpower.port'>9042</entry>
+    <entry key='globalsat.port'>9043</entry>
+    <entry key='atrack.port'>9044</entry>
+    <entry key='pt3000.port'>9045</entry>
+    <entry key='ruptela.port'>9046</entry>
+    <entry key='topflytech.port'>9047</entry>
+    <entry key='laipac.port'>9048</entry>
+    <entry key='aplicom.port'>9049</entry>
+    <entry key='gotop.port'>9050</entry>
+    <entry key='sanav.port'>9051</entry>
+    <entry key='gator.port'>9052</entry>
+    <entry key='noran.port'>9053</entry>
+    <entry key='m2m.port'>9054</entry>
+    <entry key='osmand.port'>9055</entry>
+    <entry key='easytrack.port'>9056</entry>
+    <entry key='gpsmarker.port'>9057</entry>
+    <entry key='khd.port'>9058</entry>
+    <entry key='piligrim.port'>9059</entry>
+    <entry key='stl060.port'>9060</entry>
+    <entry key='cartrack.port'>9061</entry>
+    <entry key='minifinder.port'>9062</entry>
+    <entry key='haicom.port'>9063</entry>
+    <entry key='eelink.port'>9064</entry>
+    <entry key='box.port'>9065</entry>
+    <entry key='freedom.port'>9066</entry>
+    <entry key='telic.port'>9067</entry>
+    <entry key='trackbox.port'>9068</entry>
+    <entry key='visiontek.port'>9069</entry>
+    <entry key='orion.port'>9070</entry>
+    <entry key='riti.port'>9071</entry>
+    <entry key='ulbotech.port'>9072</entry>
+    <entry key='tramigo.port'>9073</entry>
+    <entry key='tr900.port'>9074</entry>
+    <entry key='ardi01.port'>9075</entry>
+    <entry key='xt013.port'>9076</entry>
+    <entry key='autofon.port'>9077</entry>
+    <entry key='gosafe.port'>9078</entry>
+    <entry key='tt8850.port'>9079</entry>
+    <entry key='bce.port'>9080</entry>
+    <entry key='xirgo.port'>9081</entry>
+    <entry key='calamp.port'>9082</entry>
+    <entry key='mtx.port'>9083</entry>
+    <entry key='tytan.port'>9084</entry>
+    <entry key='avl301.port'>9085</entry>
+    <entry key='castel.port'>9086</entry>
+    <entry key='mxt.port'>9087</entry>
+    <entry key='cityeasy.port'>9088</entry>
+    <entry key='aquila.port'>9089</entry>
+    <entry key='flextrack.port'>9090</entry>
+    <entry key='blackkite.port'>9091</entry>
+    <entry key='adm.port'>9092</entry>
+    <entry key='watch.port'>9093</entry>
+    <entry key='t800x.port'>9094</entry>
+    <entry key='upro.port'>9095</entry>
+    <entry key='auro.port'>9096</entry>
+    <entry key='disha.port'>9097</entry>
+    <entry key='thinkrace.port'>9098</entry>
+    <entry key='pathaway.port'>9099</entry>
+    <entry key='arnavi.port'>9100</entry>
+    <entry key='nvs.port'>9101</entry>
+    <entry key='kenji.port'>9102</entry>
+    <entry key='astra.port'>9103</entry>
+    <entry key='homtecs.port'>9104</entry>
+    <entry key='fox.port'>9105</entry>
+    <entry key='gnx.port'>9106</entry>
+    <entry key='arknav.port'>9107</entry>
+    <entry key='supermate.port'>9108</entry>
+    <entry key='appello.port'>9109</entry>
+    <entry key='idpl.port'>9110</entry>
+    <entry key='huasheng.port'>9111</entry>
+    <entry key='l100.port'>9112</entry>
+    <entry key='granit.port'>9113</entry>
+    <entry key='carcell.port'>9114</entry>
+    <entry key='obddongle.port'>9115</entry>
+    <entry key='hunterpro.port'>9116</entry>
+    <entry key='raveon.port'>9117</entry>
+    <entry key='cradlepoint.port'>9118</entry>
+    <entry key='arknavx8.port'>9119</entry>
+    <entry key='autograde.port'>9120</entry>
+    <entry key='oigo.port'>9121</entry>
+    <entry key='jpkorjar.port'>9122</entry>
+    <entry key='cguard.port'>9123</entry>
+    <entry key='fifotrack.port'>9124</entry>
+    <entry key='smokey.port'>9125</entry>
+    <entry key='extremtrac.port'>9126</entry>
+    <entry key='trakmate.port'>9127</entry>
+    <entry key='at2000.port'>9128</entry>
+    <entry key='maestro.port'>9129</entry>
+    <entry key='ais.port'>9130</entry>
+    <entry key='gt30.port'>9131</entry>
+    <entry key='tmg.port'>9132</entry>
+    <entry key='pretrace.port'>9133</entry>
+    <entry key='pricol.port'>9134</entry>
+    <entry key='siwi.port'>9135</entry>
+    <entry key='starlink.port'>9136</entry>
+    <entry key='dmt.port'>9137</entry>
+    <entry key='xt2400.port'>9138</entry>
+    <entry key='dmthttp.port'>9139</entry>
+    <entry key='alematics.port'>9140</entry>
+    <entry key='gps056.port'>9141</entry>
+    <entry key='flexcomm.port'>9142</entry>
+    <entry key='vt200.port'>9143</entry>
+    <entry key='owntracks.port'>9144</entry>
+    <entry key='vtfms.port'>9145</entry>
+    <entry key='tlv.port'>9146</entry>
+    <entry key='esky.port'>9147</entry>
+    <entry key='genx.port'>9148</entry>
+    <entry key='flespi.port'>9149</entry>
+    <entry key='dway.port'>9150</entry>
+    <entry key='recoda.port'>9151</entry>
+    <entry key='oko.port'>9152</entry>
+    <entry key='ivt401.port'>9153</entry>
+    <entry key='sigfox.port'>9154</entry>
+    <entry key='t57.port'>9155</entry>
+    <entry key='spot.port'>9156</entry>
+    <entry key='m2c.port'>9157</entry>
+    <entry key='austinnb.port'>9158</entry>
+    <entry key='opengts.port'>9159</entry>
+    <entry key='cautela.port'>9160</entry>
+    <entry key='continental.port'>9161</entry>
+    <entry key='egts.port'>9162</entry>
+    <entry key='robotrack.port'>9163</entry>
+    <entry key='pt60.port'>9164</entry>
+    <entry key='telemax.port'>9165</entry>
+    <entry key='sabertek.port'>9166</entry>
+    <!-- 4.1-->
+    <entry key='retranslator.port'>5167</entry>
+    <entry key='svias.port'>9168</entry>
+    <entry key='eseal.port'>9169</entry>
+    <entry key='freematics.port'>5170</entry>
+    <entry key='avema.port'>9171</entry>
+    <entry key='autotrack.port'>5172</entry>
+    <entry key='tek.port'>9173</entry>
+    <entry key='wristband.port'>5174</entry>
+    <entry key='applet.port'>9175</entry>
+    <entry key='milesmate.port'>5176</entry>
+    <entry key='anytrek.port'>9177</entry>
+    <entry key='smartsole.port'>5178</entry>
+    <entry key='its.port'>9179</entry>
+    <!-- 4.2-->
+    <entry key='xrb28.port'>9180</entry>
+    <entry key='c2stek.port'>9181</entry>
+    <entry key='nyitech.port'>9182</entry>
+</properties>
