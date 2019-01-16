@@ -28,7 +28,7 @@ public final class RabbitMqSender {
             channel.close();
             connection.close();
             return true;
-        } catch (Exception e) {
+        } catch (Exception ex) {
             return false;
         }
     }
