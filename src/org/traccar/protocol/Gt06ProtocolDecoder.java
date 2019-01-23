@@ -67,7 +67,6 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_GPS_LBS_STATUS_3 = 0x27;
     public static final int MSG_LBS_MULTIPLE = 0x28;
     public static final int MSG_LBS_WIFI = 0x2C;
-    public static final int MSG_LBS_PHONE = 0x17;
     public static final int MSG_LBS_EXTEND = 0x18;
     public static final int MSG_LBS_STATUS = 0x19;
     public static final int MSG_GPS_PHONE = 0x1A;
@@ -94,6 +93,9 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_FENCE_MULTI = 0xA4;
     public static final int MSG_LBS_ALARM = 0xA5;
     public static final int MSG_LBS_ADDRESS = 0xA7;
+    public static final int MSG_OBD = 0x8C;
+    public static final int MSG_DTC = 0x65;
+    public static final int MSG_PID = 0x66;
 
     private static boolean isSupported(int type) {
         return hasGps(type) || hasLbs(type) || hasStatus(type);
@@ -386,7 +388,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeBasic(Channel channel, SocketAddress remoteAddress, ByteBuf buf) throws Exception {
+    private Object decodeBasic(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
 
         int length = buf.readUnsignedByte();
         int dataLength = length - 5;
@@ -485,7 +487,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
 
         } else if (type == MSG_WIFI || type == MSG_WIFI_2) {
 
-            return decodeWifi(buf, deviceSession);
+            return decodeWifi(channel, buf, deviceSession, type);
 
         } else if (type == MSG_INFO) {
 
@@ -556,18 +558,19 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
         return null;
     }
 
-    private Object decodeWifi(ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeWifi(Channel channel, ByteBuf buf, DeviceSession deviceSession, int type) {
 
         Position position = new Position(getProtocolName());
         position.setDeviceId(deviceSession.getDeviceId());
 
+        ByteBuf time = buf.readSlice(6);
         DateBuilder dateBuilder = new DateBuilder()
-                .setYear(BcdUtil.readInteger(buf, 2))
-                .setMonth(BcdUtil.readInteger(buf, 2))
-                .setDay(BcdUtil.readInteger(buf, 2))
-                .setHour(BcdUtil.readInteger(buf, 2))
-                .setMinute(BcdUtil.readInteger(buf, 2))
-                .setSecond(BcdUtil.readInteger(buf, 2));
+                .setYear(BcdUtil.readInteger(time, 2))
+                .setMonth(BcdUtil.readInteger(time, 2))
+                .setDay(BcdUtil.readInteger(time, 2))
+                .setHour(BcdUtil.readInteger(time, 2))
+                .setMinute(BcdUtil.readInteger(time, 2))
+                .setSecond(BcdUtil.readInteger(time, 2));
         getLastLocation(position, dateBuilder.getDate());
 
         Network network = new Network();
@@ -590,11 +593,21 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
 
         position.setNetwork(network);
 
+        if (channel != null) {
+            ByteBuf response = Unpooled.buffer();
+            response.writeByte(0);
+            response.writeByte(type);
+            response.writeBytes(time.resetReaderIndex());
+            response.writeByte('\r');
+            response.writeByte('\n');
+            channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+        }
+
         return position;
     }
 
     private Object decodeBasicOther(Channel channel, ByteBuf buf,
-            DeviceSession deviceSession, int type, int dataLength) throws Exception {
+                                    DeviceSession deviceSession, int type, int dataLength) {
 
         Position position = new Position(getProtocolName());
         position.setDeviceId(deviceSession.getDeviceId());
@@ -698,7 +711,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeExtended(Channel channel, SocketAddress remoteAddress, ByteBuf buf) throws Exception {
+    private Object decodeExtended(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
 
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress);
         if (deviceSession == null) {
@@ -739,23 +752,22 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             getLastLocation(position, null);
 
             if (subType == 0x00) {
-
                 position.set(Position.KEY_POWER, buf.readUnsignedShort() * 0.01);
                 return position;
-
             } else if (subType == 0x05) {
-
                 int flags = buf.readUnsignedByte();
                 position.set(Position.KEY_DOOR, BitUtil.check(flags, 0));
                 position.set(Position.PREFIX_IO + 1, BitUtil.check(flags, 2));
                 return position;
-
+            } else if (subType == 0x0a) {
+                buf.skipBytes(8); // imei
+                buf.skipBytes(8); // imsi
+                position.set("iccid", ByteBufUtil.hexDump(buf.readSlice(8)));
+                return position;
             } else if (subType == 0x0d) {
-
                 buf.skipBytes(6);
                 return decodeFuelData(position, buf.toString(
                         buf.readerIndex(), buf.readableBytes() - 4 - 2, StandardCharsets.US_ASCII));
-
             }
 
         } else if (type == MSG_X1_PHOTO_DATA) {
@@ -818,6 +830,51 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             buf.skipBytes(buf.readUnsignedByte()); // reserved extension
 
             sendResponse(channel, true, type, buf.getShort(buf.writerIndex() - 6), null);
+
+            return position;
+
+        } else if (type == MSG_OBD) {
+
+            DateBuilder dateBuilder = new DateBuilder(deviceSession.getTimeZone())
+                    .setDate(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte())
+                    .setTime(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte());
+
+            getLastLocation(position, dateBuilder.getDate());
+
+            position.set(Position.KEY_IGNITION, buf.readUnsignedByte() > 0);
+
+            String data = buf.readCharSequence(buf.readableBytes() - 18, StandardCharsets.US_ASCII).toString();
+            for (String pair : data.split(",")) {
+                String[] values = pair.split("=");
+                switch (Integer.parseInt(values[0].substring(0, 2), 16)) {
+                    case 40:
+                        position.set(Position.KEY_ODOMETER, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 43:
+                        position.set(Position.KEY_FUEL_LEVEL, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 45:
+                        position.set(Position.KEY_COOLANT_TEMP, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 53:
+                        position.set(Position.KEY_OBD_SPEED, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 54:
+                        position.set(Position.KEY_RPM, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 71:
+                        position.set(Position.KEY_FUEL_USED, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 73:
+                        position.set(Position.KEY_HOURS, Integer.parseInt(values[1], 16) * 0.01);
+                        break;
+                    case 74:
+                        position.set(Position.KEY_VIN, values[1]);
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             return position;
 
