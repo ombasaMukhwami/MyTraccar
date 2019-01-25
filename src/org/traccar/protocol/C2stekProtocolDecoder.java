@@ -146,7 +146,6 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, parser.nextInt() > 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
-
         return  position;
     }
 
