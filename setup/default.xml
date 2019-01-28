@@ -286,4 +286,5 @@
     <entry key='c2stek.port'>9181</entry>
     <entry key='nyitech.port'>9182</entry>
     <entry key='neos.port'>9183</entry>
+    <entry key='satsol.port'>5184</entry>
 </properties>
