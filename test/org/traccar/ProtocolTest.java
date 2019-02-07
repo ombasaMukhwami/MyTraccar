@@ -93,7 +93,19 @@ public class ProtocolTest extends BaseTest {
     }
 
     protected void verifyAttribute(BaseProtocolDecoder decoder, Object object, String key, Object expected) throws Exception {
-        assertEquals(expected, ((Position) decoder.decode(null, null, object)).getAttributes().get(key));
+        //assertEquals(expected, ((Position) decoder.decode(null, null, object)).getAttributes().get(key));
+        Position position = (Position) decoder.decode(null, null, object);
+        switch (key) {
+            case "speed":
+                assertEquals(expected, position.getSpeed());
+                break;
+            case "course":
+                assertEquals(expected, position.getCourse());
+                break;
+            default:
+                assertEquals(expected, position.getAttributes().get(key));
+                break;
+        }
     }
 
     protected void verifyAttributes(BaseProtocolDecoder decoder, Object object) throws Exception {
@@ -291,7 +303,7 @@ public class ProtocolTest extends BaseTest {
     }
 
     protected void verifyCommand(
-            BaseProtocolEncoder encoder, Command command, ByteBuf expected) throws Exception {
+            BaseProtocolEncoder encoder, Command command, ByteBuf expected) {
         verifyFrame(expected, encoder.encodeCommand(command));
     }
 
