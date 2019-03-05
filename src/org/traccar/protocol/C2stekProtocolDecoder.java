@@ -79,6 +79,27 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
             .text("$AP")
             .compile();
 
+    private static final Pattern PATTERN_EXTRA = new PatternBuilder()
+            .text("PA$")
+            .number("(d+)")                      // imei
+            .text("$")
+            .expression(".#")                    // data type
+            .number("(dd)(dd)(dd)#")             // date (yymmdd)
+            .number("(dd)(dd)(dd)#")             // time (hhmmss)
+            .number("([01])#")                   // valid
+            .number("([+-]?d+.d+)#")             // latitude
+            .number("([+-]?d+.d+)#")             // longitude
+            .number("(d+.d+)#")                  // speed
+            .number("(d+.d+)#")                  // course
+            .number("(-?d+.d+)#")                // altitude
+            .number("(d+)#")                     // battery
+            .number("d+#")                       // geo area alarm
+            .number("(x+)#")                     // alarm
+            .number("([01])")                    // door
+            .number("([01])")                   // ignition
+            .text("$AP")
+            .compile();
+
     private String decodeAlarm(int alarm) {
         switch (alarm) {
             case 0x1:
@@ -153,6 +174,38 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
 
         Parser parser = new Parser(PATTERN_NEXT, sentence);
         if (!parser.matches()) {
+            return decodeExtra(channel, remoteAddress, sentence);
+          }
+
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        if (deviceSession == null) {
+            return null;
+        }
+
+        Position position = new Position(getProtocolName());
+        position.setDeviceId(deviceSession.getDeviceId());
+
+        position.setTime(parser.nextDateTime());
+        position.setValid(parser.nextInt() > 0);
+        position.setLatitude(parser.nextDouble());
+        position.setLongitude(parser.nextDouble());
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextDouble()));
+        position.setCourse(parser.nextDouble());
+        position.setAltitude(parser.nextDouble());
+
+        position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
+        position.set(Position.KEY_ALARM, decodeAlarm(parser.nextHexInt()));
+
+        position.set(Position.KEY_ARMED, 0);
+        position.set(Position.KEY_DOOR, parser.nextInt() > 0);
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+
+        return  position;
+    }
+    private Object decodeExtra(Channel channel, SocketAddress remoteAddress, String sentence) {
+
+        Parser parser = new Parser(PATTERN_EXTRA, sentence);
+        if (!parser.matches()) {
             return null;
         }
 
@@ -187,7 +240,7 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
         String sentence = (String) msg;
-        if (sentence.contains("$20$") && channel != null) {
+        if ((sentence.contains("$22$") || sentence.contains("$20$")) && channel != null) {
             channel.writeAndFlush(new NetworkMessage(sentence, remoteAddress));
         }
 
