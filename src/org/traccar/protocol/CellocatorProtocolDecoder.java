@@ -71,12 +71,20 @@ public class CellocatorProtocolDecoder extends BaseProtocolDecoder {
 
     private String decodeAlarm(short reason) {
         switch (reason) {
-            case 35:
+            case 34:
                 return Position.ALARM_OVERSPEED;
+            case 35:
+                return Position.ALARM_IDLE;
             case 37:
                 return Position.ALARM_POWER_ON;
             case 45:
                 return Position.ALARM_POWER_OFF;
+            case 46:
+                return Position.ALARM_DRIVER_AUTHORIZATION;
+            case 47:
+                return Position.ALARM_UNAUTHORIZED_DRIVER;
+            case 64:
+                return Position.ALARM_DOOR;
             case 65:
                 return Position.ALARM_SHOCK;
             case 70:
@@ -85,9 +93,12 @@ public class CellocatorProtocolDecoder extends BaseProtocolDecoder {
                 return Position.ALARM_POWER_CUT;
             case 81:
                 return Position.ALARM_LOW_POWER;
+            case 82:
+                return Position.ALARM_BATTERY_CUT;
             case 83:
                 return Position.ALARM_LOW_BATTERY;
             case 87:
+            case 88:
                 return Position.ALARM_POWER_RESTORED;
             case 99:
                 return Position.ALARM_BRAKING;

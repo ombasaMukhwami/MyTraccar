@@ -94,6 +94,7 @@
     <entry key='sinotrack.port'>3299</entry>
     <entry key='queclink.port'>13979</entry>
     <entry key='dalcomomata.port'>8991</entry>
+    <entry key='safariwatch.port'>8994</entry>
     <entry key='sabo.port'>8990</entry>
     <!-- 3.xx -->
     <entry key='gps103.port'>9001</entry>
