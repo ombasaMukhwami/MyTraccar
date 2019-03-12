@@ -363,6 +363,8 @@ public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
             .text("$").optional()
             .compile();
 
+
+
     private Object decodeAck(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
         Parser parser = new Parser(PATTERN_ACK, sentence);
         if (parser.matches()) {
@@ -1072,7 +1074,7 @@ public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeBasic(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
+  private Object decodeBasic(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
         Parser parser = new Parser(PATTERN_BASIC, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -1132,6 +1134,8 @@ public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
                 position.set(Position.KEY_ALARM, Position.ALARM_LOW_BATTERY);
                 break;
             case "STT":
+                String[] data=sentence.split(",");
+                position.set(Position.KEY_STATUS, data[4]);
                 position.set(Position.KEY_ALARM, Position.ALARM_MOVEMENT);
                 break;
             case "SWG":

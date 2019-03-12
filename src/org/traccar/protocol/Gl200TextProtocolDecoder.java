@@ -1132,6 +1132,8 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                 position.set(Position.KEY_ALARM, Position.ALARM_LOW_BATTERY);
                 break;
             case "STT":
+                String[] data=sentence.split(",");
+                position.set(Position.KEY_STATUS, data[4]);
                 position.set(Position.KEY_ALARM, Position.ALARM_MOVEMENT);
                 break;
             case "SWG":
