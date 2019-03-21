@@ -51,7 +51,7 @@ public class Gl200BinaryProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_RSP_GEO = 8;
     public static final int MSG_RSP_COMPRESSED = 100;
 
-    private List<Position> decodeLocation(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
+    public List<Position> decodeLocation(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
 
         List<Position> positions = new LinkedList<>();
 
@@ -203,7 +203,7 @@ public class Gl200BinaryProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_EVT_CRA = 23;
     public static final int MSG_EVT_UPC = 34;
 
-    private Position decodeEvent(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
+    public Position decodeEvent(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
 
         Position position = new Position(getProtocolName());
 
@@ -309,7 +309,7 @@ public class Gl200BinaryProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_INF_TMZ = 9;
     public static final int MSG_INF_GIR = 10;
 
-    private Position decodeInformation(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
+    public Position decodeInformation(Channel channel, SocketAddress remoteAddress, ByteBuf buf) {
 
         Position position = new Position(getProtocolName());
 

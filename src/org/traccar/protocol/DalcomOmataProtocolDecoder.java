@@ -114,10 +114,10 @@ public class DalcomOmataProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_SPEED_LIMIT, parser.next());
             position.set(Position.KEY_GPS_SPEED, parser.next());
             position.set(Position.KEY_GPSFIX, parser.next());
-            if (latDirection == "S") {
+            if (latDirection.equalsIgnoreCase("S")) {
                 iLat  = -1 * iLat;
             }
-            if (lonDirection ==  "W") {
+            if (lonDirection.equalsIgnoreCase("W")) {
                 iLon  = -1 * iLon;
             }
 

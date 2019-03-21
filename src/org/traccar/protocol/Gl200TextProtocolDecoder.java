@@ -64,6 +64,27 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             .number("(xxxx)")                    // counter
             .text("$").optional()
             .compile();
+    private static final Pattern PATTERN_PDP = new PatternBuilder()
+            .text("+").expression("(?:RESP|BUFF):GTPDP,")
+            .number("([0-9A-Z]{2}xxxx),")        // protocol version
+            .number("(d{15}|x{14}),")            // imei
+            .any().text(",")
+            .number("(dddd)(dd)(dd)")            // date (yyyymmdd)
+            .number("(dd)(dd)(dd),")             // time (hhmmss)
+            .number("(xxxx)")                    // counter
+            .text("$").optional()
+            .compile();
+
+    private static final Pattern PATTERN_STT = new PatternBuilder()
+            .text("+").expression("(?:RESP|BUFF):GTSTT,")
+            .number("([0-9A-Z]{2}xxxx),")        // protocol version
+            .number("(d{15}|x{14}),")            // imei
+            .any().text(",")
+            .number("(dddd)(dd)(dd)")            // date (yyyymmdd)
+            .number("(dd)(dd)(dd),")             // time (hhmmss)
+            .number("(xxxx)")                    // counter
+            .text("$").optional()
+            .compile();
 
     private static final Pattern PATTERN_INF = new PatternBuilder()
             .text("+").expression("(?:RESP|BUFF):GTINF,")
@@ -363,7 +384,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             .text("$").optional()
             .compile();
 
-    private Object decodeAck(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
+    public Object decodeAck(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
         Parser parser = new Parser(PATTERN_ACK, sentence);
         if (parser.matches()) {
             String protocolVersion = parser.next();
@@ -421,7 +442,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return null;
     }
 
-    private Object decodeInf(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeInf(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_INF, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -481,7 +502,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeVer(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeVer(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_VER, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -497,7 +518,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private void decodeLocation(Position position, Parser parser) {
+    public void decodeLocation(Position position, Parser parser) {
         Integer hdop = parser.nextInt();
         position.setValid(hdop == null || hdop > 0);
         position.set(Position.KEY_HDOP, hdop);
@@ -531,7 +552,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    private Object decodeObd(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeObd(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_OBD, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -565,7 +586,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeCan(Channel channel, SocketAddress remoteAddress, String sentence) throws ParseException {
+    public Object decodeCan(Channel channel, SocketAddress remoteAddress, String sentence) throws ParseException {
         Position position = new Position(getProtocolName());
 
         int index = 0;
@@ -762,7 +783,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private void decodeStatus(Position position, Parser parser) {
+    public void decodeStatus(Position position, Parser parser) {
         if (parser.hasNext(3)) {
             int ignition = parser.nextHexInt();
             if (BitUtil.check(ignition, 4)) {
@@ -775,7 +796,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    private Object decodeFri(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeFri(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_FRI, sentence);
         if (!parser.matches()) {
             return null;
@@ -842,7 +863,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return positions;
     }
 
-    private Object decodeEri(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeEri(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_ERI, sentence);
         if (!parser.matches()) {
             return null;
@@ -930,7 +951,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return positions;
     }
 
-    private Object decodeIgn(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeIgn(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_IGN, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -948,7 +969,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeLsw(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeLsw(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_LSW, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -964,7 +985,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeIda(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeIda(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_IDA, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -981,8 +1002,24 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
 
         return position;
     }
+    public Object decodePdp(Channel channel, SocketAddress remoteAddress, String sentence) {
+        Parser parser = new Parser(PATTERN_PDP, sentence);
+        if (!parser.matches()) {
+            return null;
+        }
+        Position position  = new Position(getProtocolName());
+        String version = parser.next();
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        if (deviceSession != null) {
+             position.setDeviceId(deviceSession.getDeviceId());
+            getLastLocation(position, parser.nextDateTime());
+        }
+        position.set(Position.KEY_ALARM,Position.KEY_GPRS_RECONNECTED);
 
-    private Object decodeWif(Channel channel, SocketAddress remoteAddress, String sentence) {
+        return position;
+    }
+
+    public Object decodeWif(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_WIF, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -1008,7 +1045,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeGsm(Channel channel, SocketAddress remoteAddress, String sentence) {
+    public Object decodeGsm(Channel channel, SocketAddress remoteAddress, String sentence) {
         Parser parser = new Parser(PATTERN_GSM, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -1034,7 +1071,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeOther(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
+    public Object decodeOther(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
         Parser parser = new Parser(PATTERN, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -1072,7 +1109,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    private Object decodeBasic(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
+    public Object decodeBasic(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
         Parser parser = new Parser(PATTERN_BASIC, sentence);
         Position position = initPosition(parser, channel, remoteAddress);
         if (position == null) {
@@ -1132,7 +1169,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                 position.set(Position.KEY_ALARM, Position.ALARM_LOW_BATTERY);
                 break;
             case "STT":
-                String[] data=sentence.split(",");
+                String[] data = sentence.split(",");
                 position.set(Position.KEY_STATUS, data[4]);
                 position.set(Position.KEY_ALARM, Position.ALARM_MOVEMENT);
                 break;
@@ -1205,6 +1242,9 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                     break;
                 case "VER":
                     result = decodeVer(channel, remoteAddress, sentence);
+                    break;
+                case "PDP":
+                    result = decodePdp(channel, remoteAddress, sentence);
                     break;
                 default:
                     result = decodeOther(channel, remoteAddress, sentence, type);

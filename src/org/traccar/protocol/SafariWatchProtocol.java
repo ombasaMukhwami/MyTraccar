@@ -13,7 +13,7 @@ public class SafariWatchProtocol extends BaseProtocol {
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new CharacterDelimiterFrameDecoder(2048, false, "\r\n" , "\n"));
+                pipeline.addLast(new CharacterDelimiterFrameDecoder(2048,  false,  "\r\n",  "\n"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
                 pipeline.addLast(new SafariWatchProtocolDecoder(SafariWatchProtocol.this));
