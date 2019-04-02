@@ -64,19 +64,9 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             .number("(xxxx)")                    // counter
             .text("$").optional()
             .compile();
-    private static final Pattern PATTERN_PDP = new PatternBuilder()
-            .text("+").expression("(?:RESP|BUFF):GTPDP,")
-            .number("([0-9A-Z]{2}xxxx),")        // protocol version
-            .number("(d{15}|x{14}),")            // imei
-            .any().text(",")
-            .number("(dddd)(dd)(dd)")            // date (yyyymmdd)
-            .number("(dd)(dd)(dd),")             // time (hhmmss)
-            .number("(xxxx)")                    // counter
-            .text("$").optional()
-            .compile();
 
-    private static final Pattern PATTERN_STT = new PatternBuilder()
-            .text("+").expression("(?:RESP|BUFF):GTSTT,")
+     private static final Pattern PATTERN_PNA = new PatternBuilder()
+            .text("+").expression("(?:RESP|BUFF):GT...,")
             .number("([0-9A-Z]{2}xxxx),")        // protocol version
             .number("(d{15}|x{14}),")            // imei
             .any().text(",")
@@ -363,6 +353,33 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             .number("(?:[0-9A-Z]{2}xxxx)?,").optional() // protocol version
             .number("(d{15}|x{14}),")            // imei
             .any()
+            .number("(d{1,2})?,")                // hdop
+            .number("(d{1,3}.d)?,")              // speed
+            .number("(d{1,3})?,")                // course
+            .number("(-?d{1,5}.d)?,")            // altitude
+            .number("(-?d{1,3}.d{6})?,")         // longitude
+            .number("(-?d{1,2}.d{6})?,")         // latitude
+            .number("(dddd)(dd)(dd)")            // date (yyyymmdd)
+            .number("(dd)(dd)(dd)").optional(2)  // time (hhmmss)
+            .text(",")
+            .number("(d+),")                     // mcc
+            .number("(d+),")                     // mnc
+            .number("(x+),")                     // lac
+            .number("(x+),").optional(4)         // cell
+            .any()
+            .number("(dddd)(dd)(dd)")            // date (yyyymmdd)
+            .number("(dd)(dd)(dd)").optional(2)  // time (hhmmss)
+            .text(",")
+            .number("(xxxx)")                    // count number
+            .text("$").optional()
+            .compile();
+    private static final Pattern PATTERN_STT = new PatternBuilder()
+            .text("+").expression("(?:RESP|BUFF)").text(":")
+            .expression("GTSTT,")
+            .number("(?:[0-9A-Z]{2}xxxx)?,").optional() // protocol version
+            .number("(d{15}|x{14}),")            // imei
+            .any()
+            .number("(d{2}),")                   // motion state
             .number("(d{1,2})?,")                // hdop
             .number("(d{1,3}.d)?,")              // speed
             .number("(d{1,3})?,")                // course
@@ -1002,8 +1019,9 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
 
         return position;
     }
-    public Object decodePdp(Channel channel, SocketAddress remoteAddress, String sentence) {
-        Parser parser = new Parser(PATTERN_PDP, sentence);
+
+    public Object decodePna(Channel channel, SocketAddress remoteAddress, String sentence, String type) {
+        Parser parser = new Parser(PATTERN_PNA, sentence);
         if (!parser.matches()) {
             return null;
         }
@@ -1011,11 +1029,23 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         String version = parser.next();
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
         if (deviceSession != null) {
-             position.setDeviceId(deviceSession.getDeviceId());
+            position.setDeviceId(deviceSession.getDeviceId());
             getLastLocation(position, parser.nextDateTime());
         }
-        position.set(Position.KEY_ALARM,Position.KEY_GPRS_RECONNECTED);
+        switch (type) {
+            case "PDP":
+                position.set(Position.KEY_ALARM, Position.ALARM_GPS_RECONNECTED);
+                break;
+            case "PNA":
+                position.set(Position.KEY_ALARM, Position.ALARM_POWER_ON);
+                break;
+            case "PFA":
+                position.set(Position.KEY_ALARM, Position.ALARM_POWER_OFF);
+                break;
 
+            default:
+                break;
+        }
         return position;
     }
 
@@ -1168,6 +1198,12 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             case "BPL":
                 position.set(Position.KEY_ALARM, Position.ALARM_LOW_BATTERY);
                 break;
+            case "BTC":
+                position.set(Position.KEY_ALARM, Position.ALARM_BATTERY_CHARGING);
+                break;
+            case "STC":
+                position.set(Position.KEY_ALARM, Position.ALARM_BATTERY_STOP_CHARGING);
+                break;
             case "STT":
                 String[] data = sentence.split(",");
                 position.set(Position.KEY_STATUS, data[4]);
@@ -1175,6 +1211,12 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                 break;
             case "SWG":
                 position.set(Position.KEY_ALARM, Position.ALARM_GEOFENCE);
+                break;
+            case "IDN":
+                position.set(Position.KEY_ALARM, Position.ALARM_IDLING_START);
+                break;
+            case "IDF":
+                position.set(Position.KEY_ALARM, Position.ALARM_IDLING_END);
                 break;
             case "TMP":
             case "TEM":
@@ -1184,9 +1226,64 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
             case "JDS":
                 position.set(Position.KEY_ALARM, Position.ALARM_JAMMING);
                 break;
+            case "LSP":
+                position.set(Position.KEY_ALARM, Position.ALARM_IDLE);
+                break;
+            case "CRA":
+                position.set(Position.KEY_ALARM, Position.ALARM_CRASH);
+                break;
+            case "STR":
+                position.set(Position.KEY_ALARM, Position.ALARM_START);
+                break;
+            case "STP":
+                position.set(Position.KEY_ALARM, Position.ALARM_STOP);
+                break;
+            case "IDS":
+                position.set(Position.KEY_ALARM, Position.ALARM_DIGITAL_INPUT_STATUS_CHANGED);
+                break;
             default:
                 break;
         }
+
+        return position;
+    }
+
+    public Object decodeStt(Channel channel, SocketAddress remoteAddress, String sentence) {
+        Parser parser = new Parser(PATTERN_STT, sentence);
+        Position position = initPosition(parser, channel, remoteAddress);
+        if (position == null) {
+            return null;
+        }
+
+        position.set(Position.KEY_STATUS, parser.nextInt());
+        if (parser.hasNext()) {
+            int hdop = parser.nextInt();
+            position.setValid(hdop > 0);
+            position.set(Position.KEY_HDOP, hdop);
+        }
+
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextDouble(0)));
+        position.setCourse(parser.nextDouble(0));
+        position.setAltitude(parser.nextDouble(0));
+
+        if (parser.hasNext(2)) {
+            position.setLongitude(parser.nextDouble());
+            position.setLatitude(parser.nextDouble());
+        } else {
+            getLastLocation(position, null);
+        }
+
+        if (parser.hasNext(6)) {
+            position.setTime(parser.nextDateTime());
+        }
+
+        if (parser.hasNext(4)) {
+            position.setNetwork(new Network(CellTower.from(
+                    parser.nextInt(), parser.nextInt(), parser.nextHexInt(), parser.nextHexInt())));
+        }
+        position.set(Position.KEY_ALARM, Position.ALARM_MOVEMENT);
+        decodeDeviceTime(position, parser);
+
 
         return position;
     }
@@ -1244,7 +1341,12 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
                     result = decodeVer(channel, remoteAddress, sentence);
                     break;
                 case "PDP":
-                    result = decodePdp(channel, remoteAddress, sentence);
+                case "PFA":
+                case "PNA":
+                    result = decodePna(channel, remoteAddress, sentence, type);
+                    break;
+                case "STT":
+                    result = decodeStt(channel, remoteAddress, sentence);
                     break;
                 default:
                     result = decodeOther(channel, remoteAddress, sentence, type);

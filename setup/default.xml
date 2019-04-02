@@ -96,6 +96,7 @@
     <entry key='dalcomomata.port'>8991</entry>
     <entry key='safariwatch.port'>8994</entry>
     <entry key='sabo.port'>8990</entry>
+    <entry key='smartfast.port'>8987</entry>
     <!-- 3.xx -->
     <entry key='gps103.port'>9001</entry>
     <entry key='tk103.port'>9002</entry>

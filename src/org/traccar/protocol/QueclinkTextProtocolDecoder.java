@@ -17,31 +17,15 @@ package org.traccar.protocol;
 
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.Context;
-import org.traccar.DeviceSession;
-import org.traccar.NetworkMessage;
 import org.traccar.Protocol;
-import org.traccar.helper.BitUtil;
-import org.traccar.helper.Parser;
-import org.traccar.helper.PatternBuilder;
-import org.traccar.helper.UnitsConverter;
-import org.traccar.model.CellTower;
-import org.traccar.model.Network;
 import org.traccar.model.Position;
-import org.traccar.model.WifiAccessPoint;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
 
@@ -108,10 +92,15 @@ public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
                     result = decoder.decodeGsm(channel, remoteAddress, sentence);
                     break;
                 case "PDP":
-                    result = decoder.decodePdp(channel, remoteAddress, sentence);
+                case "PFA":
+                case "PNA":
+                    result = decoder.decodePna(channel, remoteAddress, sentence, type);
                     break;
                 case "VER":
                     result = decoder.decodeVer(channel, remoteAddress, sentence);
+                    break;
+                case "STT":
+                    result = decoder.decodeStt(channel, remoteAddress, sentence);
                     break;
                 default:
                     result = decoder.decodeOther(channel, remoteAddress, sentence, type);

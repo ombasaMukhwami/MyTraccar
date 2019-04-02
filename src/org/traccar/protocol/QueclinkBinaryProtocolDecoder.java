@@ -18,21 +18,11 @@ package org.traccar.protocol;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import org.traccar.BaseProtocolDecoder;
-import org.traccar.DeviceSession;
 import org.traccar.Protocol;
-import org.traccar.helper.BitBuffer;
-import org.traccar.helper.BitUtil;
-import org.traccar.helper.DateBuilder;
-import org.traccar.helper.UnitsConverter;
-import org.traccar.model.CellTower;
-import org.traccar.model.Network;
-import org.traccar.model.Position;
+
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 public class QueclinkBinaryProtocolDecoder extends BaseProtocolDecoder {
 
@@ -42,7 +32,6 @@ public class QueclinkBinaryProtocolDecoder extends BaseProtocolDecoder {
         super(protocol);
         decoder = new Gl200BinaryProtocolDecoder(protocol);
     }
-
 
 
     @Override

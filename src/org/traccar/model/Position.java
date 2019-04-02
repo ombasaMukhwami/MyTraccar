@@ -160,6 +160,15 @@ public class Position extends Message {
     public static final String ALARM_BOOT_OPEN = "boot";
     public static final String ALARM_FIRE = "fire";
     public static final String ALARM_CRASH = "crash";
+    public static final String ALARM_BATTERY_CHARGING = "chargingStart";
+    public static final String ALARM_BATTERY_STOP_CHARGING = "chargingStop";
+    public static final String ALARM_IDLING_START = "idlingStart";
+    public static final String ALARM_IDLING_END = "idlingEnd";
+    public static final String ALARM_START = "start";
+    public static final String ALARM_STOP = "stop";
+    public static final String ALARM_DIGITAL_INPUT_STATUS_CHANGED = "dinStatusChanged";
+    public static final String ALARM_GPS_RECONNECTED = "gprsReconnected";
+
     public Position() {
     }
 

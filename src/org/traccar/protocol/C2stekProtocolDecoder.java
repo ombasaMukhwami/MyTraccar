@@ -100,6 +100,31 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
             .text("$AP")
             .compile();
 
+    private static final Pattern PATTERN_ODM = new PatternBuilder()
+            .text("PA$")
+            .number("(d+)")                      // imei
+            .text("$")
+            .expression(".#")                    // data type
+            .number("(dd)(dd)(dd)#")             // date (yymmdd)
+            .number("(dd)(dd)(dd)#")             // time (hhmmss)
+            .number("([01])#")                   // valid
+            .number("([+-]?d+.d+)#")             // latitude
+            .number("([+-]?d+.d+)#")             // longitude
+            .number("(d+.d+)#")                  // speed
+            .number("(d+.d+)#")                  // course
+            .number("(-?d+.d+)#")                // altitude
+            .number("(d+)#")                     // battery
+            .number("d+#")                       // geo area alarm
+            .number("(x+)#")                     // alarm
+            .number("([01])")                    // door
+            .number("([01])")                   // ignition
+            .expression(".#")                   //Task Number
+            .text("B")
+            .number("(dd)")
+            .number("(d+)")
+            .text("$AP")
+            .compile();
+
     private String decodeAlarm(int alarm) {
         switch (alarm) {
             case 0x1:
