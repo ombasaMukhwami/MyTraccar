@@ -23,7 +23,10 @@ import org.traccar.BaseProtocolDecoder;
 import org.traccar.DeviceSession;
 import org.traccar.NetworkMessage;
 import org.traccar.Protocol;
-import org.traccar.helper.*;
+import org.traccar.helper.BcdUtil;
+import org.traccar.helper.DateBuilder;
+import org.traccar.helper.Helper;
+import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
@@ -59,9 +62,9 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
 
         //2929-80-0037-19D6C605-190329050716-037548350-23423740-00-00-347F81599157FFC5E00001E000000000000000500010000000006008801159915020D
         ByteBuf buf = (ByteBuf) msg;
-        String header = ByteBufUtil.hexDump(buf.readSlice(2));
+        ByteBufUtil.hexDump(buf.readSlice(2));
         int type = buf.readUnsignedShortLE();
-        String cmd = ByteBufUtil.hexDump(buf.readSlice(1));
+        ByteBufUtil.hexDump(buf.readSlice(1));
         Position position = new Position(getProtocolName());
         if (type == MSG_SHAKE_HAND_REQUEST && channel != null) {
             //29-29-B1-00-07-19-D6-C6-05-0C-B6-0D
@@ -78,7 +81,7 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
             response.writeShortLE(verify(bytez));
             response.writeShortLE(0x0D);
             channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
-            position = null;
+            return null;
         } else if (type == MSG_CANCEL_ALARM) {
           System.out.print("Test");
         } else if (type == MSG_SETUP_ACC) {
@@ -133,23 +136,23 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_ODOMETER, odometer / 1000.0);
             String validAtennaPower = Integer.toBinaryString(vap);
             //String validAtennaPower ="01234567";
-            int gps = Integer.parseInt(validAtennaPower.substring(0,1));
-            int antenna = Integer.parseInt(validAtennaPower.substring(1,3));
-            int power = Integer.parseInt(validAtennaPower.substring(3,5));
+            int gps = Integer.parseInt(validAtennaPower.substring(0, 1));
+            int antenna = Integer.parseInt(validAtennaPower.substring(1, 3));
+            int power = Integer.parseInt(validAtennaPower.substring(3, 5));
 
-             String a = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)), 16));
-            String b = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)), 16));
-            String c = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)), 16));
-            String d = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)), 16));
-            int ignition = Integer.parseInt(a.substring(0,1));
+             String a = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
+            String b = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
+            String c = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
+            String d = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
+            int ignition = Integer.parseInt(a.substring(0, 1));
             if (ignition == 1) {
                 position.set(Position.KEY_IGNITION, false);
             } else {
                 position.set(Position.KEY_IGNITION, true);
             }
+            position.set(Position.KEY_GPS, gps);
+            position.set(Position.KEY_ANTENNA, antenna);
 
-             System.out.println(a +" " + odometer+" " + b+" " + c+" " + d+" "+ vap + gps + power + antenna);
-            //position.set(Position.KEY_POWER + 2, Integer.parseInt(validAtennaPower.substring(2, 2), 2));
 
         }
         return position;
