@@ -22,16 +22,18 @@ public class SafariWatchProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private static final Pattern PATTERN = new PatternBuilder()
-            .number("(dd)/(dd)/(dddd),")         // date (ddmmyyyy)
+            .number("(dddd)/(dd)/(dd),")         // date (ddmmyyyy)
             .number("(dd):(dd):(dd),")           // time (hhmmss)
             .number("(d+),")                     // imei
             .expression("(.+),")                 //VendorId
             .expression("(.+),")                 //Vehicle registration
             .number("(d+.d+),")                  // speed
-            .number("([+-]d+.d+)")                  // latitude
-            .expression("([EW]),")               //direction
-            .number("([+-]d+.d+)")                  // longitude
-            .expression("([NS]),")               //Direction
+            .number("([+-]d+.d+) ")                  // latitude
+            //.expression("(.+) ")
+            .expression("([NS]),")               //direction
+            .number("([+-]d+.d+) ")                  // longitude
+            //.expression("(.+) ")
+            .expression("([EW]),")               //Direction
             .number("([01]),")                  //ignition
             .number("([01])")                  //Power status
             .any()
@@ -66,7 +68,7 @@ public class SafariWatchProtocolDecoder extends BaseProtocolDecoder {
     protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
         String sentence = (String) msg;
-        sentence = sentence.replace("??", "");
+        sentence = "20" + sentence.replace("°", "");
         Pattern pattern = PATTERN;
         Parser parser = new Parser(pattern, sentence);
         Position position = new Position(getProtocolName());

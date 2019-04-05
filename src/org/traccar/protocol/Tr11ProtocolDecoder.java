@@ -30,6 +30,8 @@ import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
+
 public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
     public Tr11ProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -47,6 +49,8 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_POSITION = 0x80;
     public static final int MSG_TRACKER_CONFIRMATION = 0x85;
     public static final int MSG_SETUP_ACC_ON_LCATION_UPDATE = 0x38;
+    public static final int MSG_END = 0x0D;
+    public static final int MSG_LENGTH_TO_SEND = 0x05;
 
     public byte verify(byte[] b) {
         byte a = 0;
@@ -55,7 +59,25 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
         }
         return a;
     }
+    private int getMessage(String checksum) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("2929");
+        sb.append("210005");
+        sb.append(checksum);
+        sb.append("B1");
+        byte[] dataPacket = Helper.hexStringToByteArray(sb.toString());
+        return verify(dataPacket);
+    }
+    private String getDeviceId(int f1, int f2, int f3, int f4) {
 
+        if (f2 > 128) {
+            f2 -= 128;
+        }
+        if (f3 > 128) {
+            f3 -= 128;
+        }
+        return  String.format("%02d%02d%02d%02d", f1, f2, f3, f4);
+    }
     @Override
     protected Object decode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
@@ -68,18 +90,18 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
         Position position = new Position(getProtocolName());
         if (type == MSG_SHAKE_HAND_REQUEST && channel != null) {
             //29-29-B1-00-07-19-D6-C6-05-0C-B6-0D
+            ByteBuf response = Unpooled.buffer();
             ByteBufUtil.hexDump(buf.readSlice(5));
             int cksum = buf.readUnsignedShortLE();
-            ByteBuf response = Unpooled.buffer();
+            int  checksum = getMessage(Helper.byteToHex(cksum));
             response.writeShort(0x2929);
-            response.writeShortLE(MSG_SHAKE_HAND_RESPONSE);
-            response.writeShortLE(0x05);
-            response.writeShortLE(cksum);
+            response.writeByte(33);
+            response.writeShort(MSG_LENGTH_TO_SEND);
+            response.writeByte(cksum);
             response.writeShortLE(MSG_SHAKE_HAND_REQUEST);
-            byte[] bytez = new byte[response.readableBytes()];
-            //response.writeShortLE(verify(response.array()));
-            response.writeShortLE(verify(bytez));
-            response.writeShortLE(0x0D);
+            response.writeByte(checksum);
+            response.writeByte('\r');
+
             channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
             return null;
         } else if (type == MSG_CANCEL_ALARM) {
@@ -89,19 +111,8 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
         } else if (type == MSG_POSITION_DATA || type == MSG_POSITION) {
 
 
-            int f1, f2, f3, f4;
-            f1 = buf.readUnsignedByte();
-            f2 = buf.readUnsignedByte();
-            f3 = buf.readUnsignedByte();
-            f4 = buf.readUnsignedByte();
+            String deviceId = getDeviceId(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte());
 
-            if (f2 > 128) {
-                f2 -= 128;
-            }
-            if (f3 > 128) {
-                f3 -= 128;
-            }
-            String deviceId = String.format("%02d%02d%02d%02d", f1, f2, f3, f4);
             //String deviceId =  ByteBufUtil.hexDump(buf.readSlice(4));
             DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceId);
             if (deviceSession == null) {
@@ -129,8 +140,8 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
             longitute = Double.parseDouble(lonh) + (Double.parseDouble(lonmin) / (60 * 1000));
             position.setLatitude(latitute);
             position.setLongitude(longitute);
-            position.setSpeed(BcdUtil.readInteger(buf, 4));
-            position.setCourse(UnitsConverter.knotsFromKph(BcdUtil.readInteger(buf, 4)));
+            position.setSpeed(UnitsConverter.knotsFromKph(BcdUtil.readInteger(buf, 4)));
+            position.setCourse(BcdUtil.readInteger(buf, 4));
             int vap = Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)), 16);
             int odometer = buf.readUnsignedMedium();
             position.set(Position.KEY_ODOMETER, odometer / 1000.0);
