@@ -28,11 +28,28 @@ public class SafariWatchProtocolDecoder extends BaseProtocolDecoder {
             .expression("(.+),")                 //VendorId
             .expression("(.+),")                 //Vehicle registration
             .number("(d+.d+),")                  // speed
-            .number("([+-]d+.d+) ")                  // latitude
-            //.expression("(.+) ")
+            .number("([+-]d+.d+)")                  // latitude
+            .expression("(.+) ")
             .expression("([NS]),")               //direction
-            .number("([+-]d+.d+) ")                  // longitude
-            //.expression("(.+) ")
+            .number("(d+.d+)")                  // longitude
+            .expression("(.+) ")
+            .expression("([EW]),")               //Direction
+            .number("([01]),")                  //ignition
+            .number("([01])")                  //Power status
+            .any()
+            .compile();
+    private static final Pattern PATTERN_NEXT = new PatternBuilder()
+            .number("(dddd)/(dd)/(dd),")         // date (ddmmyyyy)
+            .number("(dd):(dd):(dd),")           // time (hhmmss)
+            .number("(d+),")                     // imei
+            .expression("(.+),")                 //VendorId
+            .expression("(.+),")                 //Vehicle registration
+            .number("(d+.d+),")                  // speed
+            .number("(d+.d+)")                  // latitude
+            .expression("(.+) ")
+            .expression("([NS]),")               //direction
+            .number("([+-]d+.d+)")                  // longitude
+            .expression("(.+) ")
             .expression("([EW]),")               //Direction
             .number("([01]),")                  //ignition
             .number("([01])")                  //Power status
@@ -51,11 +68,16 @@ public class SafariWatchProtocolDecoder extends BaseProtocolDecoder {
         position.setDeviceId(deviceSession.getDeviceId());
         position.set(Position.KEY_VENDORID, parser.next());
         position.set(Position.KEY_VEHICLE_REGISTRATION, parser.next());
-        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt()));
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextDouble(0)));
         position.setLatitude(parser.nextDouble());
+        parser.next();
+        position.set(Position.KEY_LATITUTE_DIRECTION, parser.next());
         position.setLongitude(parser.nextDouble());
-        position.set(Position.KEY_IGNITION, parser.next());
+        parser.next();
+        position.set(Position.KEY_LONGITUTE_DIRECTION, parser.next());
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
         position.set(Position.KEY_STATUS, parser.next());
+
 
 
 
@@ -68,7 +90,7 @@ public class SafariWatchProtocolDecoder extends BaseProtocolDecoder {
     protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
         String sentence = (String) msg;
-        sentence = "20" + sentence.replace("°", "");
+        sentence = "20" + sentence;//.replace("°", "");
         Pattern pattern = PATTERN;
         Parser parser = new Parser(pattern, sentence);
         Position position = new Position(getProtocolName());
