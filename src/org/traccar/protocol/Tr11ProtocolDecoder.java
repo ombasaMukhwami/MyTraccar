@@ -30,7 +30,6 @@ import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
-import java.nio.ByteBuffer;
 
 public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
     public Tr11ProtocolDecoder(Protocol protocol) {

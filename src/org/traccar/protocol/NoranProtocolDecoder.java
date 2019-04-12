@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+
 public class NoranProtocolDecoder extends BaseProtocolDecoder {
 
     public NoranProtocolDecoder(Protocol protocol) {
@@ -48,12 +49,33 @@ public class NoranProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_IMAGE_SIZE = 0x0200;
     public static final int MSG_IMAGE_PACKET = 0x0201;
 
+    //NORAN 34000800010B00000000000089430753134299B6A3BF4E523039423036323032000031392D30342D30382031333A32323A353400
+    private Position decodeBasic(Position position, ByteBuf buf) {
+
+        return position;
+    }
+private boolean getIgnition(int alarm, Position position) {
+    if (alarm == 12) {
+        return false;
+    } else if (alarm == 11) {
+        return true;
+    } else {
+        Position last = getLastLocation(position);
+        if (last != null) {
+            if (last.getAttributes().containsKey(Position.KEY_IGNITION)) {
+                return  (boolean) last.getAttributes().get(Position.KEY_IGNITION);
+            }
+        }
+        return true;
+    }
+}
+
     @Override
     protected Object decode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
         ByteBuf buf = (ByteBuf) msg;
-
+        short alarm;
         buf.readUnsignedShortLE(); // length
         int type = buf.readUnsignedShortLE();
 
@@ -72,23 +94,18 @@ public class NoranProtocolDecoder extends BaseProtocolDecoder {
         } else if (type == MSG_UPLOAD_POSITION || type == MSG_UPLOAD_POSITION_NEW
                 || type == MSG_CONTROL_RESPONSE || type == MSG_ALARM) {
 
-            boolean newFormat = false;
-            if (type == MSG_UPLOAD_POSITION && buf.readableBytes() == 48
-                    || type == MSG_ALARM && buf.readableBytes() == 48
-                    || type == MSG_CONTROL_RESPONSE && buf.readableBytes() == 57) {
-                newFormat = true;
+
+            int test = buf.readableBytes();
+            if (type == MSG_UPLOAD_POSITION && test == 48 || type == MSG_ALARM && test == 48 || type == MSG_CONTROL_RESPONSE && test == 57) {
+
             }
 
             Position position = new Position(getProtocolName());
 
-            if (type == MSG_CONTROL_RESPONSE) {
-                buf.readUnsignedIntLE(); // GIS ip
-                buf.readUnsignedIntLE(); // GIS port
-            }
 
             position.setValid(BitUtil.check(buf.readUnsignedByte(), 0));
 
-            short alarm = buf.readUnsignedByte();
+            alarm = buf.readUnsignedByte();
             switch (alarm) {
                 case 1:
                     position.set(Position.KEY_ALARM, Position.ALARM_SOS);
@@ -106,54 +123,24 @@ public class NoranProtocolDecoder extends BaseProtocolDecoder {
                     break;
             }
 
-            if (newFormat) {
-                position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedIntLE()));
-                position.setCourse(buf.readFloatLE());
-            } else {
-                position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedByte()));
-                position.setCourse(buf.readUnsignedShortLE());
-            }
+            position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedByte()));
+            position.setCourse(buf.readUnsignedShortLE());
             position.setLongitude(buf.readFloatLE());
             position.setLatitude(buf.readFloatLE());
 
-            if (!newFormat) {
-                long timeValue = buf.readUnsignedIntLE();
-                DateBuilder dateBuilder = new DateBuilder()
-                        .setYear((int) BitUtil.from(timeValue, 26))
-                        .setMonth((int) BitUtil.between(timeValue, 22, 26))
-                        .setDay((int) BitUtil.between(timeValue, 17, 22))
-                        .setHour((int) BitUtil.between(timeValue, 12, 17))
-                        .setMinute((int) BitUtil.between(timeValue, 6, 12))
-                        .setSecond((int) BitUtil.to(timeValue, 6));
-                position.setTime(dateBuilder.getDate());
-            }
-
-            ByteBuf rawId;
-            if (newFormat) {
-                rawId = buf.readSlice(12);
-            } else {
-                rawId = buf.readSlice(11);
-            }
+            ByteBuf rawId = buf.readSlice(12);
             String id = rawId.toString(StandardCharsets.US_ASCII).replaceAll("[^\\p{Print}]", "");
             DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, id);
             if (deviceSession == null) {
                 return null;
             }
             position.setDeviceId(deviceSession.getDeviceId());
-
-            if (newFormat) {
-                DateFormat dateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
-                position.setTime(dateFormat.parse(buf.readSlice(17).toString(StandardCharsets.US_ASCII)));
-                buf.readByte();
-            }
-
-            if (!newFormat) {
-                position.set(Position.PREFIX_IO + 1, buf.readUnsignedByte());
-                position.set(Position.KEY_FUEL_LEVEL, buf.readUnsignedByte());
-            } else if (type == MSG_UPLOAD_POSITION_NEW) {
-                position.set(Position.PREFIX_TEMP + 1, buf.readShortLE());
-                position.set(Position.KEY_ODOMETER, buf.readFloatLE());
-            }
+            DateFormat dateFormat = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+            position.setTime(dateFormat.parse(buf.readSlice(17).toString(StandardCharsets.US_ASCII)));
+            buf.readByte();
+            position.set(Position.PREFIX_TEMP + 1, buf.readShortLE());
+            position.set(Position.KEY_ODOMETER, buf.readFloatLE());
+            position.set(Position.KEY_IGNITION, getIgnition(alarm, position));
 
             return position;
         }

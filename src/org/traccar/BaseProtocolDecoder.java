@@ -207,6 +207,15 @@ public abstract class BaseProtocolDecoder extends ExtendedObjectDecoder {
             }
         }
     }
+    public Position getLastLocation(Position position) {
+
+        Position last = null;
+        if (position.getDeviceId() != 0) {
+            position.setOutdated(true);
+            last = identityManager.getLastPosition(position.getDeviceId());
+        }
+        return last;
+    }
 
     @Override
     protected void onMessageEvent(

@@ -43,7 +43,7 @@ public final class Helper {
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i),  16) << 4) + Character.digit(s.charAt(i+1),  16));
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i),  16) << 4) + Character.digit(s.charAt(i + 1),  16));
         }
         return data;
     }
@@ -65,8 +65,34 @@ public final class Helper {
     }
 
     public  static  String byteToHex(int b) {
-        int i =b & 0XFF;
+        int i = b & 0XFF;
         //return String.format("%02s",  Integer.toHexString(i));
-        return String.format("%02x",i);
+        return String.format("%02x", i);
+    }
+
+    public static String getTimeString(int nDateTime)
+    {
+        int ndate = 0;
+        StringBuilder sb = new StringBuilder();
+        ndate = nDateTime >> 26;//year
+        sb.append((ndate / 10));
+        sb.append((ndate % 10) + "-");
+        ndate = nDateTime >> 22 & 0x0f;//month f=15
+        sb.append((ndate / 10));
+        sb.append((ndate % 10) + "-");
+        ndate = nDateTime >> 17 & 0x1f;//day 2f=31
+        sb.append((ndate / 10));
+        sb.append((ndate % 10) + " ");
+        ndate = nDateTime >> 12 & 0x1f;//hour 3f=63
+        sb.append((ndate / 10));
+        sb.append((ndate % 10) + ":");
+        ndate = nDateTime >> 6 & 0x3f;//minute
+        sb.append((ndate / 10));
+        sb.append((ndate % 10) + ":");
+        ndate = nDateTime & 0x3f;//second
+        sb.append((ndate / 10));
+        sb.append((ndate % 10));
+
+        return sb.toString();
     }
 }
