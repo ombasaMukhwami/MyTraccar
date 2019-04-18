@@ -20,21 +20,27 @@ public class PortmanProtocolDecoder extends BaseProtocolDecoder {
         super(protocol);
     }
 
+   // %%100000000007031,A,04,190417123428,S3155.3076E11552.9871,000,128,NA,4E000816,110,GNA,CFG:0.00|
     private static final Pattern PATTERN = new PatternBuilder()
-            .number("(dddd)/(dd)/(dd),")         // date (ddmmyyyy)
-            .number("(dd):(dd):(dd),")           // time (hhmmss)
-            .number("(d+),")                     // imei
-            .expression("(.+),")                 //VendorId
-            .expression("(.+),")                 //Vehicle registration
-            .number("(d+.d+),")                  // speed
-            .number("([+-]d+.d+)")                  // latitude
-            .expression("(.+) ")
-            .expression("([NS]),")               //direction
-            .number("(d+.d+)")                  // longitude
-            .expression("(.+) ")
-            .expression("([EW]),")               //Direction
-            .number("([01]),")                  //ignition
-            .number("([01])")                  //Power status
+            .number("(d+),")          //imei           100000000007031
+            .text("([AL]),")        // [GPS Valid]     A
+            .expression("(d+),")          // Sat       04
+            .number("(dd)(dd)(dd)")       // date      190417
+            .number("(dd)(dd)(dd),")      //time       123428
+            .expression("([NS])")          //direction S
+            .number("(dd)")               //lat        31
+            .number("(d+.d+)")            //lat        55.3076
+            .expression("([EW])")         //lon dir    E
+            .number("(ddd)")              //lon        115
+            .number("(d+.d+),")           //lon        52.9871
+            .number("(d+),")              //speed      000
+            .number("(d+),")              //course     128
+            .expression("(.+),")          //           NA
+            .expression("(.+),")          //status     4E000816
+            .number("(d+),")              //Event Id   110
+            .expression("(.+),")          //           GNA
+            .text("(CFG:)")               //           CFG:
+            .number("(d+.d+)")            //           0.00
             .any()
             .compile();
 

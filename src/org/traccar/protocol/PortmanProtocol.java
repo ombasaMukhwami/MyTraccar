@@ -13,7 +13,7 @@ public class PortmanProtocol extends BaseProtocol {
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, false,  "\r\n"));
+                pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, false,  "%%", "|", "$"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
                 pipeline.addLast(new PortmanProtocolDecoder(PortmanProtocol.this));
@@ -22,7 +22,7 @@ public class PortmanProtocol extends BaseProtocol {
         addServer(new TrackerServer(true, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, false,  "\r\n"));
+                pipeline.addLast(new CharacterDelimiterFrameDecoder(2048, false,  "%%", "|", "$"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
                 pipeline.addLast(new PortmanProtocolDecoder(PortmanProtocol.this));

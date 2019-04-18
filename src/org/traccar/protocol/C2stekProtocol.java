@@ -21,16 +21,26 @@ import org.traccar.BaseProtocol;
 import org.traccar.CharacterDelimiterFrameDecoder;
 import org.traccar.PipelineBuilder;
 import org.traccar.TrackerServer;
+import org.traccar.model.Command;
 
 public class C2stekProtocol  extends BaseProtocol {
 
     public C2stekProtocol() {
+        setSupportedDataCommands(
+                Command.TYPE_ALARM_ARM,
+                Command.TYPE_ALARM_DISARM,
+                Command.TYPE_REBOOT_DEVICE,
+                Command.TYPE_SET_ODOMETER,
+                Command.TYPE_ENGINE_STOP,
+                Command.TYPE_ENGINE_RESUME,
+                Command.TYPE_CUSTOM);
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, false, "$AP"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
+                pipeline.addLast(new C2stekProtocolEncoder());
                 pipeline.addLast(new C2stekProtocolDecoder(C2stekProtocol.this));
             }
         });

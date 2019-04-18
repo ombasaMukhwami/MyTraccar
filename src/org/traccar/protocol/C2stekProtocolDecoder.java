@@ -169,8 +169,8 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         if (!parser.matches()) {
             return null;
         }
-
-        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        String imei = parser.next();
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, imei);
         if (deviceSession == null) {
             return null;
         }
@@ -192,6 +192,7 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, parser.nextInt() > 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+
         return  position;
     }
 
@@ -202,7 +203,8 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
             return decodeExtra(channel, remoteAddress, sentence);
           }
 
-        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        String imei = parser.next();
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, imei);
         if (deviceSession == null) {
             return null;
         }
@@ -224,6 +226,7 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+
 
         return  position;
     }
@@ -234,7 +237,8 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
             return null;
         }
 
-        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        String imei = parser.next();
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, imei);
         if (deviceSession == null) {
             return null;
         }
@@ -256,8 +260,39 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
-
+        //sendReply(channel, remoteAddress, position, imei);
         return  position;
+    }
+
+    private void sendReply(Channel channel, SocketAddress remoteAddress, Position position, String imei) {
+        if (position.getAttributes().containsKey(Position.KEY_ALARM)) {
+
+            String alarm = (String) position.getAttributes().get(Position.KEY_ALARM);
+            switch (alarm) {
+                case Position.ALARM_MOVEMENT:
+                case Position.ALARM_SHOCK:
+                case Position.ALARM_POWER_CUT:
+                case Position.ALARM_OVERSPEED:
+                case Position.ALARM_SOS:
+                case Position.ALARM_DOOR:
+                case Position.ALARM_POWER_ON:
+                case Position.ALARM_POWER_OFF:
+                case Position.ALARM_GLASS_BROKEN:
+                case Position.ALARM_LOW_BATTERY:
+                case Position.ALARM_CRASH:
+                case Position.ALARM_FIRE:
+                case Position.ALARM_FUEL_LEAK:
+                case Position.ALARM_INTRUSION:
+                case Position.ALARM_BOOT_OPEN:
+                    //String uniqueId = getUniqueId(position.getDeviceId());
+                    String sentence = String.format("PA$%s$16$AP", imei);
+                    channel.writeAndFlush(new NetworkMessage(sentence, remoteAddress));
+                    break;
+                    default:
+                        break;
+            }
+        }
+
     }
 
     @Override

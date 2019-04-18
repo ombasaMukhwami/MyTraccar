@@ -16,24 +16,35 @@
 package org.traccar.protocol;
 
 import io.netty.channel.Channel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.traccar.BaseProtocolDecoder;
+import org.traccar.Context;
 import org.traccar.DeviceSession;
+import org.traccar.NetworkMessage;
 import org.traccar.Protocol;
+import org.traccar.helper.DateBuilder;
 import org.traccar.helper.Parser;
 import org.traccar.helper.PatternBuilder;
 import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class XirgoProtocolDecoder extends BaseProtocolDecoder {
 
+    private Boolean newFormat;
+    private String form;
+
     public XirgoProtocolDecoder(Protocol protocol) {
         super(protocol);
+        form = Context.getConfig().getString(getProtocolName() + ".form");
     }
 
-    private Boolean newFormat;
+    public void setForm(String form) {
+        this.form = form;
+    }
 
     private static final Pattern PATTERN_OLD = new PatternBuilder()
             .text("$$")
@@ -166,6 +177,118 @@ public class XirgoProtocolDecoder extends BaseProtocolDecoder {
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
         String sentence = (String) msg;
+
+        if (channel instanceof NioDatagramChannel) {
+            Matcher matcher = Pattern.compile("\\$\\$\\d+,(\\d+),.*,(\\d+)##").matcher(sentence);
+            if (matcher.matches()) {
+                String response = "!UDP_ACK," + matcher.group(1) + "," + matcher.group(2);
+                channel.writeAndFlush(new NetworkMessage(response, remoteAddress));
+            }
+        }
+
+        if (form != null) {
+            return decodeCustom(channel, remoteAddress, sentence);
+        } else {
+            return decodeFixed(channel, remoteAddress, sentence);
+        }
+    }
+
+
+    private Object decodeCustom(
+            Channel channel, SocketAddress remoteAddress, String sentence) {
+
+        String[] keys = form.split(",");
+        String[] values = sentence.replace("$$", "").replace("##", "").split(",");
+
+        if (values.length < keys.length) {
+            return null;
+        }
+
+        Position position = new Position(getProtocolName());
+        DateBuilder dateBuilder = new DateBuilder();
+
+        for (int i = 0; i < keys.length; i++) {
+            switch (keys[i]) {
+                case "UID":
+                case "IM":
+                    DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, values[i]);
+                    if (deviceSession != null) {
+                        position.setDeviceId(deviceSession.getDeviceId());
+                    }
+                    break;
+                case "EV":
+                    decodeEvent(position, Integer.parseInt(values[i]));
+                    break;
+                case "D":
+                    String[] date = values[i].split("/");
+                    dateBuilder.setMonth(Integer.parseInt(date[0]));
+                    dateBuilder.setDay(Integer.parseInt(date[1]));
+                    dateBuilder.setYear(Integer.parseInt(date[2]));
+                    break;
+                case "T":
+                    String[] time = values[i].split(":");
+                    dateBuilder.setHour(Integer.parseInt(time[0]));
+                    dateBuilder.setMinute(Integer.parseInt(time[1]));
+                    dateBuilder.setSecond(Integer.parseInt(time[2]));
+                    break;
+                case "LT":
+                    position.setLatitude(Double.parseDouble(values[i]));
+                    break;
+                case "LN":
+                    position.setLongitude(Double.parseDouble(values[i]));
+                    break;
+                case "AL":
+                    position.setAltitude(Integer.parseInt(values[i]));
+                    break;
+                case "GSPT":
+                    position.setSpeed(UnitsConverter.knotsFromKph(Double.parseDouble(values[i])));
+                    break;
+                case "HD":
+                    if (values[i].contains(".")) {
+                        position.setCourse(Double.parseDouble(values[i]));
+                    } else {
+                        position.setCourse(Integer.parseInt(values[i]) * 0.1);
+                    }
+                    break;
+                case "SV":
+                    position.set(Position.KEY_SATELLITES, Integer.parseInt(values[i]));
+                    break;
+                case "BV":
+                    position.set(Position.KEY_BATTERY, Double.parseDouble(values[i]));
+                    break;
+                case "CQ":
+                    position.set(Position.KEY_RSSI, Integer.parseInt(values[i]));
+                    break;
+                case "MI":
+                    position.set(Position.KEY_ODOMETER, Integer.parseInt(values[i]));
+                    break;
+                case "GS":
+                    position.setValid(Integer.parseInt(values[i]) == 3);
+                    break;
+                case "SI":
+                    position.set("iccid", values[i]);
+                    break;
+                case "IG":
+                    int ignition = Integer.parseInt(values[i]);
+                    if (ignition > 0) {
+                        position.set(Position.KEY_IGNITION, ignition == 1);
+                    }
+                    break;
+                case "OT":
+                    position.set(Position.KEY_OUTPUT, Integer.parseInt(values[i]));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        position.setTime(dateBuilder.getDate());
+
+        return position.getDeviceId() > 0 ? position : null;
+    }
+
+    private Object decodeFixed(
+            Channel channel, SocketAddress remoteAddress, String sentence) {
 
         Parser parser;
         if (newFormat == null) {

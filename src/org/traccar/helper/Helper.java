@@ -70,26 +70,25 @@ public final class Helper {
         return String.format("%02x", i);
     }
 
-    public static String getTimeString(int nDateTime)
-    {
+    public static String getTimeString(int nDateTime) {
         int ndate = 0;
         StringBuilder sb = new StringBuilder();
-        ndate = nDateTime >> 26;//year
+        ndate = nDateTime >> 26; //year
         sb.append((ndate / 10));
         sb.append((ndate % 10) + "-");
-        ndate = nDateTime >> 22 & 0x0f;//month f=15
+        ndate = nDateTime >> 22 & 0x0f; //month f=15
         sb.append((ndate / 10));
         sb.append((ndate % 10) + "-");
-        ndate = nDateTime >> 17 & 0x1f;//day 2f=31
+        ndate = nDateTime >> 17 & 0x1f; //day 2f=31
         sb.append((ndate / 10));
         sb.append((ndate % 10) + " ");
-        ndate = nDateTime >> 12 & 0x1f;//hour 3f=63
+        ndate = nDateTime >> 12 & 0x1f; //hour 3f=63
         sb.append((ndate / 10));
         sb.append((ndate % 10) + ":");
-        ndate = nDateTime >> 6 & 0x3f;//minute
+        ndate = nDateTime >> 6 & 0x3f; //minute
         sb.append((ndate / 10));
         sb.append((ndate % 10) + ":");
-        ndate = nDateTime & 0x3f;//second
+        ndate = nDateTime & 0x3f; //second
         sb.append((ndate / 10));
         sb.append((ndate % 10));
 

@@ -18,14 +18,8 @@ package org.traccar.protocol;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.Context;
 import org.traccar.Protocol;
-import org.traccar.model.Position;
-
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-
 import java.net.SocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
 
@@ -44,85 +38,7 @@ public class QueclinkTextProtocolDecoder extends BaseProtocolDecoder {
     protected Object decode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
-        String sentence = ((ByteBuf) msg).toString(StandardCharsets.US_ASCII);
-
-        int typeIndex = sentence.indexOf(":GT");
-        if (typeIndex < 0) {
-            return null;
-        }
-
-        Object result;
-        String type = sentence.substring(typeIndex + 3, typeIndex + 6);
-        if (sentence.startsWith("+ACK")) {
-            result = decoder.decodeAck(channel, remoteAddress, sentence, type);
-        } else {
-            switch (type) {
-                case "INF":
-                    result = decoder.decodeInf(channel, remoteAddress, sentence);
-                    break;
-                case "OBD":
-                    result = decoder.decodeObd(channel, remoteAddress, sentence);
-                    break;
-                case "CAN":
-                    result = decoder.decodeCan(channel, remoteAddress, sentence);
-                    break;
-                case "FRI":
-                case "GEO":
-                case "STR":
-                    result = decoder.decodeFri(channel, remoteAddress, sentence);
-                    break;
-                case "ERI":
-                    result = decoder.decodeEri(channel, remoteAddress, sentence);
-                    break;
-                case "IGN":
-                case "IGF":
-                    result = decoder.decodeIgn(channel, remoteAddress, sentence);
-                    break;
-                case "LSW":
-                case "TSW":
-                    result = decoder.decodeLsw(channel, remoteAddress, sentence);
-                    break;
-                case "IDA":
-                    result = decoder.decodeIda(channel, remoteAddress, sentence);
-                    break;
-                case "WIF":
-                    result = decoder.decodeWif(channel, remoteAddress, sentence);
-                    break;
-                case "GSM":
-                    result = decoder.decodeGsm(channel, remoteAddress, sentence);
-                    break;
-                case "PDP":
-                case "PFA":
-                case "PNA":
-                    result = decoder.decodePna(channel, remoteAddress, sentence, type);
-                    break;
-                case "VER":
-                    result = decoder.decodeVer(channel, remoteAddress, sentence);
-                    break;
-                case "STT":
-                    result = decoder.decodeStt(channel, remoteAddress, sentence);
-                    break;
-                default:
-                    result = decoder.decodeOther(channel, remoteAddress, sentence, type);
-                    break;
-            }
-
-            if (result == null) {
-                result = decoder.decodeBasic(channel, remoteAddress, sentence, type);
-            }
-
-            if (result != null) {
-                if (result instanceof Position) {
-                    ((Position) result).set(Position.KEY_TYPE, type);
-                } else {
-                    for (Position p : (List<Position>) result) {
-                        p.set(Position.KEY_TYPE, type);
-                    }
-                }
-            }
-        }
-
-        return result;
+        return decoder.startDecode(channel, remoteAddress, msg);
     }
 
 }
