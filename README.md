@@ -18,10 +18,12 @@ Some of the available features include:
 
 ## Build
 
-Please read [build from source documentation](https://www.traccar.org/build/) on the official website.
+Use maven
 
+## Additions
+more devices have been added which were not supported before
 ## Team
 
-- Ombasa Mukhwami ([mukhwami@gmail.com](mailto:anton@traccar.org))
+- Ombasa Mukhwami (mukhwami@gmail.com)
 
 
