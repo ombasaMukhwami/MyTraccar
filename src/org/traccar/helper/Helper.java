@@ -26,6 +26,17 @@ public final class Helper {
         return binaryResult.reverse().toString();
 
     }
+    public static String toBinary(int numVal, int bit) {
+        // Declare a few variables we're going to need
+        StringBuilder binaryResult = new StringBuilder();
+        for (int i = 0; i < bit; i++) {
+            binaryResult.append(numVal % 2);
+            numVal = numVal / 2;
+        }
+        return binaryResult.reverse().toString();
+
+    }
+
     public static int toInteger(String s) {
         int x = 128;
         int total = 0;

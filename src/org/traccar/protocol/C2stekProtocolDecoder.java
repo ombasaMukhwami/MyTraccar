@@ -187,11 +187,12 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.setAltitude(parser.nextDouble());
 
         position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
-        position.set(Position.KEY_ALARM, decodeAlarm(parser.nextHexInt()));
+        int alarm = parser.nextHexInt();
+        position.set(Position.KEY_ALARM, decodeAlarm(alarm));
 
         position.set(Position.KEY_ARMED, parser.nextInt() > 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
-        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        position.set(Position.KEY_IGNITION, ignitionStatus(alarm) > 0);
 
         return  position;
     }
@@ -221,11 +222,12 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.setAltitude(parser.nextDouble());
 
         position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
-        position.set(Position.KEY_ALARM, decodeAlarm(parser.nextHexInt()));
+        int alarm = parser.nextHexInt();
+        position.set(Position.KEY_ALARM, decodeAlarm(alarm));
 
         position.set(Position.KEY_ARMED, 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
-        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        position.set(Position.KEY_IGNITION, ignitionStatus(alarm) > 0);
 
 
         return  position;
@@ -255,14 +257,26 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.setAltitude(parser.nextDouble());
 
         position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
-        position.set(Position.KEY_ALARM, decodeAlarm(parser.nextHexInt()));
+        int alarm = parser.nextHexInt();
+        position.set(Position.KEY_ALARM, decodeAlarm(alarm));
 
         position.set(Position.KEY_ARMED, 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
-        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        position.set(Position.KEY_IGNITION, ignitionStatus(alarm) > 0);
         //sendReply(channel, remoteAddress, position, imei);
         return  position;
     }
+private int ignitionStatus(int alarm) {
+    switch (alarm) {
+        case 0x8:
+            return 1;
+        case 0x9:
+            return 0;
+        default:
+            return 0;
+    }
+
+}
 
     private void sendReply(Channel channel, SocketAddress remoteAddress, Position position, String imei) {
         if (position.getAttributes().containsKey(Position.KEY_ALARM)) {
