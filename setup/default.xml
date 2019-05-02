@@ -292,4 +292,10 @@
     <entry key='nyitech.port'>9182</entry>
     <entry key='neos.port'>9183</entry>
     <entry key='satsol.port'>5184</entry>
+    <!-- 4.4-->
+    <entry key='globalstar.port'>9185</entry>
+    <entry key='sanul.port'>9186</entry>
+    <entry key='minifinder2.port'>9187</entry>
+    <entry key='radar.port'>9188</entry>
+    <entry key='techtlt.port'>9189</entry>
 </properties>

@@ -43,8 +43,8 @@ public class PortmanProtocolDecoder extends BaseProtocolDecoder {
             .expression("(.+),")          //status     4E000816
             .number("(d+),")              //Event Id   110
             .expression("(.+),")          //           GNA
-            .text("CFG:")               //           CFG:
-            .number("(d+.d+)")            //           0.00
+           // .text("CFG:")               //           CFG:
+           // .number("(d+.d+)")            //           0.00
             .any()
             .compile();
 
@@ -82,8 +82,7 @@ public class PortmanProtocolDecoder extends BaseProtocolDecoder {
         int ignition = Integer.parseInt(deviceStatus.substring(14, 15));
         position.set(Position.KEY_IGNITION, ignition > 0);
         position.set(Position.KEY_EVENT, parser.nextInt());
-        parser.next();
-        parser.next();
+
         return position;
     }
 
