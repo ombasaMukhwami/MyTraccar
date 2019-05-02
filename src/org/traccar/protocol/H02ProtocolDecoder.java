@@ -88,19 +88,18 @@ public class H02ProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private Integer decodeBattery(int value) {
-        switch (value) {
-            case 6:
-                return 100;
-            case 5:
-                return 80;
-            case 4:
-                return 60;
-            case 3:
-                return 20;
-            case 2:
-                return 10;
-            default:
-                return null;
+        if (value == 0) {
+            return null;
+        } else if (value <= 3) {
+            return (value - 1) * 10;
+        } else if (value <= 6) {
+            return (value - 1) * 20;
+        } else if (value <= 100) {
+            return value;
+        } else if (value >= 0xF1 && value <= 0xF6) {
+            return value - 0xF0;
+        } else {
+            return null;
         }
     }
 
@@ -543,10 +542,7 @@ public class H02ProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    @Override
-    protected Object decode(
-            Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
-
+    public Object startDecode(Channel channel, SocketAddress remoteAddress, Object msg) {
         ByteBuf buf = (ByteBuf) msg;
         String marker = buf.toString(0, 1, StandardCharsets.US_ASCII);
 
@@ -578,6 +574,13 @@ public class H02ProtocolDecoder extends BaseProtocolDecoder {
             default:
                 return null;
         }
+    }
+
+    @Override
+    protected Object decode(
+            Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
+
+           return startDecode(channel, remoteAddress, msg);
     }
 
 }

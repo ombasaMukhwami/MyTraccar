@@ -38,7 +38,7 @@ public class Tlt2hProtocolDecoder extends BaseProtocolDecoder {
     private static final Pattern PATTERN_HEADER = new PatternBuilder()
             .number("#(d+)#")                    // imei
             .any()
-            .expression("([^#]+)#")              // status
+            .expression("#([^#]+)#")             // status
             .number("d+")                        // number of records
             .compile();
 

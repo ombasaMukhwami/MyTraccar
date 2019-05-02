@@ -50,7 +50,6 @@ public class AutoTrackProtocolDecoder extends BaseProtocolDecoder {
         Position position = new Position(getProtocolName());
         position.setDeviceId(deviceSession.getDeviceId());
 
-        //position.setTime(new Date(1007078400000L + buf.readUnsignedIntLE() * 1000)); // seconds since 2002
         position.setTime(new Date(1009843200000L + buf.readUnsignedIntLE() * 1000)); // seconds since 2002
         position.setLatitude(buf.readIntLE() * 0.0000001);
         position.setLongitude(buf.readIntLE() * 0.0000001);
@@ -104,7 +103,7 @@ public class AutoTrackProtocolDecoder extends BaseProtocolDecoder {
 
         switch (type) {
             case MSG_LOGIN_REQUEST:
-                String imei = ByteBufUtil.hexDump(buf.readBytes(8));
+                String imei = ByteBufUtil.hexDump(buf.readSlice(8));
                 DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, imei);
                 if (deviceSession == null) {
                     return null;

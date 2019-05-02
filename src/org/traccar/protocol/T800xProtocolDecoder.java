@@ -32,6 +32,7 @@ import org.traccar.model.Network;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
 
 public class T800xProtocolDecoder extends BaseProtocolDecoder {
 
@@ -45,20 +46,27 @@ public class T800xProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_ALARM = 0x04;
     public static final int MSG_COMMAND = 0x81;
 
-    private void sendResponse(Channel channel, short header, int type, ByteBuf imei) {
+    private void sendResponse(Channel channel, short header, int type, int index, ByteBuf imei, int alarm) {
         if (channel != null) {
-            ByteBuf response = Unpooled.buffer(15);
+            ByteBuf response = Unpooled.buffer(alarm > 0 ? 16 : 15);
             response.writeShort(header);
             response.writeByte(type);
             response.writeShort(response.capacity()); // length
-            response.writeShort(0x0001); // index
+            response.writeShort(index);
             response.writeBytes(imei);
+            if (alarm > 0) {
+                response.writeByte(alarm);
+            }
             channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
         }
     }
 
-    private String decodeAlarm(short value) {
+    private String decodeAlarm(int value) {
         switch (value) {
+            case 1:
+                return Position.ALARM_POWER_CUT;
+            case 2:
+                return Position.ALARM_LOW_BATTERY;
             case 3:
                 return Position.ALARM_SOS;
             case 4:
@@ -67,13 +75,20 @@ public class T800xProtocolDecoder extends BaseProtocolDecoder {
                 return Position.ALARM_GEOFENCE_ENTER;
             case 6:
                 return Position.ALARM_GEOFENCE_EXIT;
+            case 7:
+                return Position.ALARM_TOW;
             case 8:
             case 10:
                 return Position.ALARM_VIBRATION;
+            case 21:
+                return Position.ALARM_JAMMING;
+            case 23:
+                return Position.ALARM_POWER_RESTORED;
+            case 24:
+                return Position.ALARM_LOW_POWER;
             default:
-                break;
+                return null;
         }
-        return null;
     }
 
     @Override
@@ -94,95 +109,123 @@ public class T800xProtocolDecoder extends BaseProtocolDecoder {
             return null;
         }
 
-        if (type == MSG_LOGIN || type == MSG_ALARM || type == MSG_HEARTBEAT) {
-            sendResponse(channel, header, type, imei);
-        }
-
         if (type == MSG_GPS || type == MSG_ALARM) {
+
+            return decodePosition(channel, deviceSession, buf, header, type, index, imei);
+
+        } else if (type == MSG_COMMAND) {
 
             Position position = new Position(getProtocolName());
             position.setDeviceId(deviceSession.getDeviceId());
 
-            position.set(Position.KEY_INDEX, index);
+            getLastLocation(position, null);
 
-            buf.readUnsignedShort(); // acc on interval
-            buf.readUnsignedShort(); // acc off interval
-            buf.readUnsignedByte(); // angle compensation
-            buf.readUnsignedShort(); // distance compensation
-            buf.readUnsignedShort(); // speed alarm
+            buf.readUnsignedByte(); // protocol number
 
-            int status = buf.readUnsignedByte();
+            position.set(Position.KEY_RESULT, buf.toString(StandardCharsets.UTF_16LE));
 
-            buf.readUnsignedByte(); // gsensor manager status
-            buf.readUnsignedByte(); // other flags
-            buf.readUnsignedByte(); // heartbeat
-            buf.readUnsignedByte(); // relay status
-            buf.readUnsignedShort(); // drag alarm setting
-
-            int io = buf.readUnsignedShort();
-            position.set(Position.KEY_IGNITION, BitUtil.check(io, 14));
-            position.set("ac", BitUtil.check(io, 13));
-
-            position.set(Position.PREFIX_ADC + 1, buf.readUnsignedShort());
-            position.set(Position.PREFIX_ADC + 2, buf.readUnsignedShort());
-
-            position.set(Position.KEY_ALARM, decodeAlarm(buf.readUnsignedByte()));
-
-            buf.readUnsignedByte(); // reserved
-
-            position.set(Position.KEY_ODOMETER, buf.readUnsignedInt());
-
-            int battery = BcdUtil.readInteger(buf, 2);
-            if (battery == 0) {
-                battery = 100;
-            }
-            position.set(Position.KEY_BATTERY, battery);
-
-            DateBuilder dateBuilder = new DateBuilder()
-                    .setYear(BcdUtil.readInteger(buf, 2))
-                    .setMonth(BcdUtil.readInteger(buf, 2))
-                    .setDay(BcdUtil.readInteger(buf, 2))
-                    .setHour(BcdUtil.readInteger(buf, 2))
-                    .setMinute(BcdUtil.readInteger(buf, 2))
-                    .setSecond(BcdUtil.readInteger(buf, 2));
-
-            if (BitUtil.check(status, 6)) {
-
-                position.setValid(!BitUtil.check(status, 7));
-                position.setTime(dateBuilder.getDate());
-                position.setAltitude(buf.readFloatLE());
-                position.setLongitude(buf.readFloatLE());
-                position.setLatitude(buf.readFloatLE());
-                position.setSpeed(UnitsConverter.knotsFromKph(BcdUtil.readInteger(buf, 4) * 0.1));
-                position.setCourse(buf.readUnsignedShort());
-
-            } else {
-
-                getLastLocation(position, dateBuilder.getDate());
-
-                int mcc = buf.readUnsignedShortLE();
-                int mnc = buf.readUnsignedShortLE();
-
-                if (mcc != 0xffff && mnc != 0xffff) {
-                    Network network = new Network();
-                    for (int i = 0; i < 3; i++) {
-                        network.addCellTower(CellTower.from(
-                                mcc, mnc, buf.readUnsignedShortLE(), buf.readUnsignedShortLE()));
-                    }
-                    position.setNetwork(network);
-                }
-
-            }
-
-            if (buf.readableBytes() >= 2) {
-                position.set(Position.KEY_POWER, BcdUtil.readInteger(buf, 4) * 0.01);
-            }
+            sendResponse(channel, header, type, index, imei, 0);
 
             return position;
 
         }
 
+        sendResponse(channel, header, type, index, imei, 0);
+
         return null;
+    }
+
+    private Position decodePosition(
+            Channel channel, DeviceSession deviceSession,
+            ByteBuf buf, short header, int type, int index, ByteBuf imei) {
+
+        Position position = new Position(getProtocolName());
+        position.setDeviceId(deviceSession.getDeviceId());
+
+        position.set(Position.KEY_INDEX, index);
+
+        buf.readUnsignedShort(); // acc on interval
+        buf.readUnsignedShort(); // acc off interval
+        buf.readUnsignedByte(); // angle compensation
+        buf.readUnsignedShort(); // distance compensation
+
+        position.set(Position.KEY_RSSI, BitUtil.to(buf.readUnsignedShort(), 7));
+
+        int status = buf.readUnsignedByte();
+        position.set(Position.KEY_SATELLITES, BitUtil.to(status, 5));
+
+        buf.readUnsignedByte(); // gsensor manager status
+        buf.readUnsignedByte(); // other flags
+        buf.readUnsignedByte(); // heartbeat
+        buf.readUnsignedByte(); // relay status
+        buf.readUnsignedShort(); // drag alarm setting
+
+        int io = buf.readUnsignedShort();
+        position.set(Position.KEY_IGNITION, BitUtil.check(io, 14));
+        position.set("ac", BitUtil.check(io, 13));
+        for (int i = 0; i <= 2; i++) {
+            position.set(Position.PREFIX_OUT + (i + 1), BitUtil.check(io, 7 + i));
+        }
+
+        position.set(Position.PREFIX_ADC + 1, buf.readUnsignedShort());
+        position.set(Position.PREFIX_ADC + 2, buf.readUnsignedShort());
+
+        int alarm = buf.readUnsignedByte();
+        position.set(Position.KEY_ALARM, decodeAlarm(alarm));
+
+        buf.readUnsignedByte(); // reserved
+
+        position.set(Position.KEY_ODOMETER, buf.readUnsignedInt());
+
+        int battery = BcdUtil.readInteger(buf, 2);
+        if (battery == 0) {
+            battery = 100;
+        }
+        position.set(Position.KEY_BATTERY, battery);
+
+        DateBuilder dateBuilder = new DateBuilder()
+                .setYear(BcdUtil.readInteger(buf, 2))
+                .setMonth(BcdUtil.readInteger(buf, 2))
+                .setDay(BcdUtil.readInteger(buf, 2))
+                .setHour(BcdUtil.readInteger(buf, 2))
+                .setMinute(BcdUtil.readInteger(buf, 2))
+                .setSecond(BcdUtil.readInteger(buf, 2));
+
+        if (BitUtil.check(status, 6)) {
+
+            position.setValid(!BitUtil.check(status, 7));
+            position.setTime(dateBuilder.getDate());
+            position.setAltitude(buf.readFloatLE());
+            position.setLongitude(buf.readFloatLE());
+            position.setLatitude(buf.readFloatLE());
+            position.setSpeed(UnitsConverter.knotsFromKph(BcdUtil.readInteger(buf, 4) * 0.1));
+            position.setCourse(buf.readUnsignedShort());
+
+        } else {
+
+            getLastLocation(position, dateBuilder.getDate());
+
+            int mcc = buf.readUnsignedShortLE();
+            int mnc = buf.readUnsignedShortLE();
+
+            if (mcc != 0xffff && mnc != 0xffff) {
+                Network network = new Network();
+                for (int i = 0; i < 3; i++) {
+                    network.addCellTower(CellTower.from(
+                            mcc, mnc, buf.readUnsignedShortLE(), buf.readUnsignedShortLE()));
+                }
+                position.setNetwork(network);
+            }
+
+        }
+
+        if (buf.readableBytes() >= 2) {
+            position.set(Position.KEY_POWER, BcdUtil.readInteger(buf, 4) * 0.01);
+        }
+
+        sendResponse(channel, header, type, index, imei, alarm);
+
+        return position;
     }
 
 }

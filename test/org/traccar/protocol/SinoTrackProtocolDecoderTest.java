@@ -4,12 +4,12 @@ import org.junit.Test;
 import org.traccar.ProtocolTest;
 import org.traccar.model.Position;
 
-public class H02ProtocolDecoderTest extends ProtocolTest {
+public class SinoTrackProtocolDecoderTest extends ProtocolTest {
 
     @Test
     public void testDecode() throws Exception {
 
-        H02ProtocolDecoder decoder = new H02ProtocolDecoder(null);
+        SinoTrackProtocolDecoder decoder = new SinoTrackProtocolDecoder(null);
 
         verifyPosition(decoder, binary(
                 "24702802061601234020031910125482600612695044000000ffffbbff000000000000000001760d04e2c9934d"));

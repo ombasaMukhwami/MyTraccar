@@ -15,10 +15,15 @@
  */
 package org.traccar.protocol;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import org.traccar.BaseProtocolDecoder;
+import org.traccar.Context;
 import org.traccar.DeviceSession;
+import org.traccar.NetworkMessage;
 import org.traccar.Protocol;
+import org.traccar.helper.Checksum;
 import org.traccar.helper.Parser;
 import org.traccar.helper.PatternBuilder;
 import org.traccar.helper.UnitsConverter;
@@ -27,9 +32,12 @@ import org.traccar.model.Network;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class FifotrackProtocolDecoder extends BaseProtocolDecoder {
+
+    private ByteBuf photo;
 
     public FifotrackProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -65,11 +73,42 @@ public class FifotrackProtocolDecoder extends BaseProtocolDecoder {
             .any()
             .compile();
 
-    @Override
-    protected Object decode(
-            Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
+    private static final Pattern PATTERN_PHOTO = new PatternBuilder()
+            .text("$$")
+            .number("d+,")                       // length
+            .number("(d+),")                     // imei
+            .any()
+            .number(",(d+),")                    // length
+            .expression("([^*]+)")               // photo id
+            .text("*")
+            .number("xx")
+            .compile();
 
-        Parser parser = new Parser(PATTERN, (String) msg);
+    private static final Pattern PATTERN_PHOTO_DATA = new PatternBuilder()
+            .text("$$")
+            .number("d+,")                       // length
+            .number("(d+),")                     // imei
+            .number("x+,")                       // index
+            .expression("[^,]+,")                // type
+            .expression("([^,]+),")              // photo id
+            .number("(d+),")                     // offset
+            .number("(d+),")                     // size
+            .compile();
+
+    private void requestPhoto(Channel channel, SocketAddress socketAddress, String imei, String file) {
+        if (channel != null) {
+            String content = "1,D06," + file + "," + photo.writerIndex() + "," + Math.min(1024, photo.writableBytes());
+            int length = 1 + imei.length() + 1 + content.length();
+            String response = String.format("##%02d,%s,%s*", length, imei, content);
+            response += Checksum.sum(response) + "\r\n";
+            channel.writeAndFlush(new NetworkMessage(response, socketAddress));
+        }
+    }
+
+    private Object decodeLocation(
+            Channel channel, SocketAddress remoteAddress, String sentence) {
+
+        Parser parser = new Parser(PATTERN, sentence);
         if (!parser.matches()) {
             return null;
         }
@@ -120,6 +159,62 @@ public class FifotrackProtocolDecoder extends BaseProtocolDecoder {
         }
 
         return position;
+    }
+
+    @Override
+    protected Object decode(
+            Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
+
+        ByteBuf buf = (ByteBuf) msg;
+        int typeIndex = buf.indexOf(buf.readerIndex(), buf.writerIndex(), (byte) ',') + 1;
+        typeIndex = buf.indexOf(typeIndex, buf.writerIndex(), (byte) ',') + 1;
+        typeIndex = buf.indexOf(typeIndex, buf.writerIndex(), (byte) ',') + 1;
+        String type = buf.toString(typeIndex, 3, StandardCharsets.US_ASCII);
+
+        if (type.equals("D05")) {
+            String sentence = buf.toString(StandardCharsets.US_ASCII);
+            Parser parser = new Parser(PATTERN_PHOTO, sentence);
+            if (parser.matches()) {
+                String imei = parser.next();
+                int length = parser.nextInt();
+                String photoId = parser.next();
+                photo = Unpooled.buffer(length);
+                requestPhoto(channel, remoteAddress, imei, photoId);
+            }
+        } else if (type.equals("D06")) {
+            if (photo == null) {
+                return null;
+            }
+            int dataIndex = buf.indexOf(typeIndex + 4, buf.writerIndex(), (byte) ',') + 1;
+            dataIndex = buf.indexOf(dataIndex, buf.writerIndex(), (byte) ',') + 1;
+            dataIndex = buf.indexOf(dataIndex, buf.writerIndex(), (byte) ',') + 1;
+            String sentence = buf.toString(buf.readerIndex(), dataIndex, StandardCharsets.US_ASCII);
+            Parser parser = new Parser(PATTERN_PHOTO_DATA, sentence);
+            if (parser.matches()) {
+                String imei = parser.next();
+                String photoId = parser.next();
+                parser.nextInt(); // offset
+                parser.nextInt(); // size
+                buf.readerIndex(dataIndex);
+                buf.readBytes(photo, buf.readableBytes() - 3); // ignore checksum
+                if (photo.isWritable()) {
+                    requestPhoto(channel, remoteAddress, imei, photoId);
+                } else {
+                    Position position = new Position(getProtocolName());
+                    position.setDeviceId(getDeviceSession(channel, remoteAddress, imei).getDeviceId());
+                    getLastLocation(position, null);
+                    position.set(Position.KEY_IMAGE, Context.getMediaManager().writeFile(imei, photo, "jpg"));
+                    photo.release();
+                    photo = null;
+                    return position;
+                }
+            }
+        } else {
+            String sentence = buf.toString(StandardCharsets.US_ASCII);
+            return decodeLocation(channel, remoteAddress, sentence);
+        }
+
+        return null;
     }
 
 }

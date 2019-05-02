@@ -20,6 +20,7 @@ import org.traccar.BaseProtocolDecoder;
 import org.traccar.DeviceSession;
 import org.traccar.NetworkMessage;
 import org.traccar.Protocol;
+import org.traccar.helper.BitUtil;
 import org.traccar.helper.Parser;
 import org.traccar.helper.PatternBuilder;
 import org.traccar.helper.UnitsConverter;
@@ -46,7 +47,10 @@ public class BoxProtocolDecoder extends BaseProtocolDecoder {
             .number("(d+.?d*),")                 // distance
             .number("(d+),")                     // event
             .number("(d+)")                      // status
-            .any()
+            .groupBegin()
+            .text(";")
+            .expression("(.+)")
+            .groupEnd("?")
             .compile();
 
     @Override
@@ -84,17 +88,27 @@ public class BoxProtocolDecoder extends BaseProtocolDecoder {
 
             position.setTime(parser.nextDateTime());
 
-            position.setLatitude(parser.nextDouble(0));
-            position.setLongitude(parser.nextDouble(0));
-            position.setSpeed(UnitsConverter.knotsFromKph(parser.nextDouble(0)));
-            position.setCourse(parser.nextDouble(0));
+            position.setLatitude(parser.nextDouble());
+            position.setLongitude(parser.nextDouble());
+            position.setSpeed(UnitsConverter.knotsFromKph(parser.nextDouble()));
+            position.setCourse(parser.nextDouble());
 
-            position.set(Position.KEY_ODOMETER_TRIP, parser.nextDouble(0) * 1000);
+            position.set(Position.KEY_ODOMETER_TRIP, parser.nextDouble() * 1000);
             position.set(Position.KEY_EVENT, parser.next());
 
-            int status = parser.nextInt(0);
-            position.setValid((status & 0x04) == 0);
+            int status = parser.nextInt();
+            position.set(Position.KEY_IGNITION, BitUtil.check(status, 0));
+            position.set(Position.KEY_MOTION, BitUtil.check(status, 1));
+            position.setValid(!BitUtil.check(status, 2));
             position.set(Position.KEY_STATUS, status);
+
+            if (parser.hasNext()) {
+                String[] data = parser.next().split(";");
+                for (String item : data) {
+                    int valueIndex = item.indexOf(',');
+                    position.set(item.substring(0, valueIndex).toLowerCase(), item.substring(valueIndex + 1));
+                }
+            }
 
             return position;
         }

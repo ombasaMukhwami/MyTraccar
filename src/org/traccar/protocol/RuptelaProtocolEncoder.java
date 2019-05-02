@@ -46,6 +46,12 @@ public class RuptelaProtocolEncoder extends BaseProtocolEncoder {
             case Command.TYPE_CUSTOM:
                 content.writeBytes(command.getString(Command.KEY_DATA).getBytes(StandardCharsets.US_ASCII));
                 return encodeContent(RuptelaProtocolDecoder.MSG_SMS_VIA_GPRS, content);
+            case Command.TYPE_REQUEST_PHOTO:
+                content.writeByte(1); // sub-command
+                content.writeByte(0); // source
+                content.writeInt(0); // start timestamp
+                content.writeInt(Integer.MAX_VALUE); // end timestamp
+                return encodeContent(RuptelaProtocolDecoder.MSG_FILES, content);
             case Command.TYPE_CONFIGURATION:
                 content.writeBytes((command.getString(Command.KEY_DATA) + "\r\n").getBytes(StandardCharsets.US_ASCII));
                 return encodeContent(RuptelaProtocolDecoder.MSG_DEVICE_CONFIGURATION, content);

@@ -15,20 +15,24 @@
  */
 package org.traccar.protocol;
 
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import org.traccar.BaseProtocol;
 import org.traccar.PipelineBuilder;
 import org.traccar.TrackerServer;
+import org.traccar.model.Command;
 
 public class FifotrackProtocol extends BaseProtocol {
 
     public FifotrackProtocol() {
+        setSupportedDataCommands(
+                Command.TYPE_CUSTOM,
+                Command.TYPE_REQUEST_PHOTO);
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new LineBasedFrameDecoder(1024));
-                pipeline.addLast(new StringDecoder());
+                pipeline.addLast(new FifotrackFrameDecoder());
+                pipeline.addLast(new StringEncoder());
+                pipeline.addLast(new FifotrackProtocolEncoder());
                 pipeline.addLast(new FifotrackProtocolDecoder(FifotrackProtocol.this));
             }
         });
