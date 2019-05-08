@@ -59,6 +59,23 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
             .groupEnd("?")
             .compile();
 
+    private static final Pattern PATTERN_NTSA = new PatternBuilder()
+            .text("#")
+            .number("(dd)(dd)(dd),")             //date (ddmmyy)
+            .number("(dd):(dd):(dd),")           //time (hhmmss)
+            .number("(d+),")                     //imei
+            .expression("(.+),")                 //VendorId
+            .expression("(.+),")                 //Vehicle registration
+            .number("(d+),")                     //speed
+            .number("(dd)(d+.d+);")             //Longitute
+            .expression("([EW]);")               //direction
+            .number("(d)(d+.d+);")              //latitute
+            .expression("([NS]),")               //Direction
+            .number("([01]),")                   //ignition
+            .number("([01])")                    //Power status
+            .any()
+            .compile();
+
     private void sendResponse(Channel channel, SocketAddress remoteAddress, String type, Integer number) {
         if (channel != null) {
             StringBuilder response = new StringBuilder("#A");
@@ -130,6 +147,27 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
+    private Object ntsaGovernor(Parser parser, Channel channel, SocketAddress remoteAddress) {
+
+        Position position = new Position(getProtocolName());
+        position.setTime(parser.nextDateTime(Parser.DateTimeFormat.MDY_HMS));
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        if (deviceSession == null) {
+            return null;
+        }
+
+        position.setDeviceId(deviceSession.getDeviceId());
+        position.set(Position.KEY_VENDORID, parser.next());
+        position.set(Position.KEY_VEHICLE_REGISTRATION, parser.next());
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt()));
+        position.setLongitude(parser.nextCoordinate());
+        position.setLatitude(parser.nextCoordinate());
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        position.set(Position.KEY_STATUS, parser.next());
+
+        return position;
+    }
+
     @Override
     protected Object decode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
@@ -196,7 +234,12 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
                 break;
 
             default:
-                break;
+                Pattern pattern = PATTERN_NTSA;
+                Parser parser = new Parser(pattern, sentence);
+                if (!parser.matches()) {
+                    return null;
+                }
+                return ntsaGovernor(parser, channel, remoteAddress);
 
         }
 

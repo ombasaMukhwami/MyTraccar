@@ -32,6 +32,8 @@ public class TramigoFrameDecoder extends BaseFrameDecoder {
         int length;
         if (buf.getUnsignedByte(buf.readerIndex()) == 0x80) {
             length = buf.getUnsignedShortLE(buf.readerIndex() + 6);
+        } else if (buf.getUnsignedByte(buf.readerIndex()) == 0x04) {
+            length = buf.getUnsignedShort(buf.readerIndex() + 6);
         } else {
             length = buf.getUnsignedShort(buf.readerIndex() + 6);
         }

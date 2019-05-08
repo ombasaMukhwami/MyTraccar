@@ -238,6 +238,8 @@ public class Parser {
         DMY_HMSS,
         YMD_HMS,
         YMD_HMSS,
+        MDY_HMS,
+        MDY_HMSS,
     }
 
     public Date nextDateTime(DateTimeFormat format, String timeZone) {
@@ -291,6 +293,15 @@ public class Parser {
             case DMY_HMSS:
                 day = nextInt(0);
                 month = nextInt(0);
+                year = nextInt(0);
+                hour = nextInt(0);
+                minute = nextInt(0);
+                second = nextInt(0);
+                break;
+            case MDY_HMS:
+            case MDY_HMSS:
+                month = nextInt(0);
+                day = nextInt(0);
                 year = nextInt(0);
                 hour = nextInt(0);
                 minute = nextInt(0);

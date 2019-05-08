@@ -15,6 +15,7 @@
  */
 package org.traccar.protocol;
 
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.DeviceSession;
@@ -26,6 +27,7 @@ import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Position;
 
 import java.net.SocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
@@ -193,7 +195,7 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, parser.nextInt() > 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, ignitionStatus(alarm) > 0);
-
+        sendReply(channel, remoteAddress, position, imei);
         return  position;
     }
 
@@ -228,7 +230,7 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, ignitionStatus(alarm) > 0);
-
+        sendReply(channel, remoteAddress, position, imei);
 
         return  position;
     }
@@ -263,7 +265,8 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
         position.set(Position.KEY_ARMED, 0);
         position.set(Position.KEY_DOOR, parser.nextInt() > 0);
         position.set(Position.KEY_IGNITION, ignitionStatus(alarm) > 0);
-        //sendReply(channel, remoteAddress, position, imei);
+        sendReply(channel, remoteAddress, position, imei);
+
         return  position;
     }
 private int ignitionStatus(int alarm) {
@@ -300,7 +303,10 @@ private int ignitionStatus(int alarm) {
                 case Position.ALARM_BOOT_OPEN:
                     //String uniqueId = getUniqueId(position.getDeviceId());
                     String sentence = String.format("PA$%s$16$AP", imei);
-                    channel.writeAndFlush(new NetworkMessage(sentence, remoteAddress));
+                    if (channel != null) {
+                        channel.writeAndFlush(new NetworkMessage(
+                                Unpooled.copiedBuffer(sentence, StandardCharsets.US_ASCII), remoteAddress));
+                    }
                     break;
                     default:
                         break;

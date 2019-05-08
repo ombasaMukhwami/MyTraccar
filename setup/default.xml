@@ -98,6 +98,10 @@
     <entry key='sabo.port'>8990</entry>
     <entry key='smartfast.port'>8987</entry>
     <entry key='portman.port'>18005</entry>
+    <entry key='wlttramigo.port'>9556</entry>
+    <!--<entry key='ntsahuabao.port'>8988</entry>-->
+    <entry key='huabao1.port'>8988</entry>
+
     <!-- 3.xx -->
     <entry key='gps103.port'>9001</entry>
     <entry key='tk103.port'>9002</entry>
