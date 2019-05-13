@@ -77,7 +77,7 @@ public class SafariWatchProtocolDecoder extends BaseProtocolDecoder {
         position.set(Position.KEY_LONGITUTE_DIRECTION, parser.next());
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
         position.set(Position.KEY_STATUS, parser.next());
-
+        position.set(Position.KEY_GOVERNOR, 1);
 
 
 

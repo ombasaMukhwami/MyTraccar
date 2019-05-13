@@ -56,7 +56,7 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
         position.set(Position.KEY_LATITUTE_DIRECTION, latDir);
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
         position.set(Position.KEY_STATUS, parser.next());
-
+        position.set(Position.KEY_GOVERNOR, 1);
         if (latDir.equalsIgnoreCase("S")) {
             lat = -1 * lat;
         }

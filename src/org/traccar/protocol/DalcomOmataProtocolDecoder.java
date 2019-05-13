@@ -120,7 +120,7 @@ public class DalcomOmataProtocolDecoder extends BaseProtocolDecoder {
             if (lonDirection.equalsIgnoreCase("W")) {
                 iLon  = -1 * iLon;
             }
-
+            position.set(Position.KEY_GOVERNOR, 1);
             position.setLatitude(iLat);
             position.setLongitude(iLon);
 

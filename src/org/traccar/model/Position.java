@@ -105,6 +105,7 @@ public class Position extends Message {
     public static final String KEY_SPEED_LIMIT = "speedLimit";
     public static final String KEY_GPS_SPEED = "gpsSpeed";
     public static final String KEY_GPSFIX = "gpsFix";
+    public static final String KEY_GOVERNOR = "governor";
 
     // Start with 1 not 0
     public static final String PREFIX_TEMP = "temp";

@@ -164,7 +164,7 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
         position.setLatitude(parser.nextCoordinate());
         position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
         position.set(Position.KEY_STATUS, parser.next());
-
+        position.set(Position.KEY_GOVERNOR, 1);
         return position;
     }
 
