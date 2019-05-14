@@ -28,7 +28,7 @@ public class GlobalSatProtocol extends BaseProtocol {
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, '!'));
+                pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, "!\r\n", "!"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
                 pipeline.addLast(new GlobalSatProtocolDecoder(GlobalSatProtocol.this));
