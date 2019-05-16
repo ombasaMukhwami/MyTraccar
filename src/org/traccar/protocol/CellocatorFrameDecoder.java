@@ -46,11 +46,14 @@ public class CellocatorFrameDecoder extends BaseFrameDecoder {
                 break;
             case CellocatorProtocolDecoder.MSG_CLIENT_SERIAL:
                 if (buf.readableBytes() >= 19) {
-                    length = 19 + buf.getUnsignedShortLE(16);
+                    length = 19 + buf.getUnsignedShortLE(buf.readerIndex() + 16);
                 }
                 break;
             case CellocatorProtocolDecoder.MSG_CLIENT_MODULAR:
-                length = 15 + buf.getUnsignedByte(13);
+                length = 15 + buf.getUnsignedByte(buf.readerIndex() + 13);
+                break;
+            case CellocatorProtocolDecoder.MSG_CLIENT_MODULAR_EXT:
+                length = 16 + buf.getUnsignedShortLE(buf.readerIndex() + 13);
                 break;
             default:
                 break;

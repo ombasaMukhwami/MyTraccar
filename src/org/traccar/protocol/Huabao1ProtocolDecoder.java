@@ -11,12 +11,12 @@ import java.net.SocketAddress;
 public class Huabao1ProtocolDecoder extends BaseProtocolDecoder {
 
     private final Huabao1TextProtocolDecoder textProtocolDecoder;
-    private final Huabao1BinaryProtocolDecoder binaryProtocolDecoder;
+    private final HuabaoProtocolDecoder binaryProtocolDecoder;
 
     public Huabao1ProtocolDecoder(Protocol protocol) {
         super(protocol);
         textProtocolDecoder = new Huabao1TextProtocolDecoder(protocol);
-        binaryProtocolDecoder = new Huabao1BinaryProtocolDecoder(protocol);
+        binaryProtocolDecoder = new HuabaoProtocolDecoder(protocol);
     }
 
     @Override

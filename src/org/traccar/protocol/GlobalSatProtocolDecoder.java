@@ -57,7 +57,7 @@ public class GlobalSatProtocolDecoder extends BaseProtocolDecoder {
         }
 
         String format;
-        if (sentence.startsWith("GSr")) {
+        if (sentence.startsWith("GSr") || sentence.startsWith("GSb")) {
             format = format0;
         } else if (sentence.startsWith("GSh")) {
             format = format1;

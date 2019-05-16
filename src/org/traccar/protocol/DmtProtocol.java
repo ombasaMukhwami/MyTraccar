@@ -19,15 +19,18 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.traccar.BaseProtocol;
 import org.traccar.PipelineBuilder;
 import org.traccar.TrackerServer;
+import org.traccar.model.Command;
 
 import java.nio.ByteOrder;
 public class DmtProtocol extends BaseProtocol {
 
     public DmtProtocol() {
+        setSupportedDataCommands(Command.TYPE_CUSTOM);
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, 1024, 3, 2, 0, 0, true));
+                pipeline.addLast(new DmtProtocolEncoder());
                 pipeline.addLast(new DmtProtocolDecoder(DmtProtocol.this));
             }
         });
