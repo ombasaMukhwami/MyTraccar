@@ -104,6 +104,12 @@
     <!--<entry key='batton.port'>8981</entry>-->
     <!--<entry key='saferider.port'>8983</entry>-->
     <entry key='trident.port'>8984</entry>
+    <entry key='mock.port'>8980</entry>
+    <entry key='cable.port'>8979</entry>
+    <entry key='centro.port'>8978</entry>
+    <entry key='inter.port'>8977</entry>
+    <entry key='controltech.port'>8976</entry>
+
     <entry key='portman.port'>18005</entry>
     <entry key='wlttramigo.port'>9556</entry>
 
