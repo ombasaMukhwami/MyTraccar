@@ -1,5 +1,6 @@
 package org.traccar.protocol;
 
+import io.netty.buffer.Unpooled;
 import org.traccar.BaseFrameDecoder;
 
 import io.netty.buffer.ByteBuf;
@@ -33,11 +34,29 @@ public class Huabao1FrameDecoder extends BaseFrameDecoder {
         if (isBinary(buf)) {
             return buf.readRetainedSlice(buf.readableBytes());
         } else {
+            int index = buf.indexOf(buf.readerIndex() + 1, buf.writerIndex(), (byte) 0x7e);
+            if (index != -1) {
+                ByteBuf result = Unpooled.buffer(index + 1 - buf.readerIndex());
 
-            return buf.readRetainedSlice(buf.readableBytes());
+                while (buf.readerIndex() <= index) {
+                    int b = buf.readUnsignedByte();
+                    if (b == 0x7d) {
+                        int ext = buf.readUnsignedByte();
+                        if (ext == 0x01) {
+                            result.writeByte(0x7d);
+                        } else if (ext == 0x02) {
+                            result.writeByte(0x7e);
+                        }
+                    } else {
+                        result.writeByte(b);
+                    }
+                }
+
+                return result;
+            }
         }
 
-      //return null;
+      return null;
     }
 
 }

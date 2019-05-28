@@ -35,6 +35,54 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
             .any()
             .compile();
 
+    private static final Pattern PATTERN_NEXT = new PatternBuilder()
+            .number("(dd)(dd)(dd),")     // date (ddmmyyyy)
+            .number("(dd):(dd):(dd),")     // time (hhmmss)
+            .number("(d+),")               // imei
+            .expression("(.+),")           //VendorId
+            .expression("(.+),")           //Vehicle registration
+            .number("(d+),")               // speed
+            .number("(d+.d+),")            // longitute
+            .expression("([EW]);")         //direction
+            .number("(d+.d+),")            // latitute
+            .expression("([NS]);")         //Direction
+            .number("([01]),")             //ignition
+            .number("([01])")              //Power status
+            .any()
+            .compile();
+
+    public Object decodeNext(Parser parser, Position position, Channel channel, SocketAddress remoteAddress) throws Exception {
+        position.setTime(parser.nextDateTime(Parser.DateTimeFormat.MDY_HMS));
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        if (deviceSession == null) {
+            return null;
+        }
+        double lat, lon;
+        String latDir, lonDir;
+        position.setDeviceId(deviceSession.getDeviceId());
+        position.set(Position.KEY_VENDORID, parser.next());
+        position.set(Position.KEY_VEHICLE_REGISTRATION, parser.next());
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt()));
+        lon = parser.nextDouble();
+        lonDir = parser.next();
+        position.set(Position.KEY_LONGITUTE_DIRECTION, lonDir);
+        lat = parser.nextDouble() / 60.0;
+        latDir = parser.next();
+        position.set(Position.KEY_LATITUTE_DIRECTION, latDir);
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        position.set(Position.KEY_STATUS, parser.next());
+        position.set(Position.KEY_GOVERNOR, 1);
+        if (latDir.equalsIgnoreCase("S")) {
+            lat = -1 * lat;
+        }
+
+        if (lonDir.equalsIgnoreCase("W")) {
+            lon = -1 * lon;
+        }
+        position.setLongitude(lon);
+        position.setLatitude(lat);
+        return position;
+    }
 
     public Object decodeMessage(Parser parser, Position position, Channel channel, SocketAddress remoteAddress) throws Exception {
         position.setTime(parser.nextDateTime(Parser.DateTimeFormat.MDY_HMS));
@@ -77,7 +125,12 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
         Parser parser = new Parser(pattern, sentence);
         Position position = new Position(getProtocolName());
         if (!parser.matches()) {
-            return null;
+            pattern = PATTERN_NEXT;
+            parser = new Parser(pattern, sentence);
+            if (!parser.matches()) {
+                return null;
+            }
+            return decodeNext(parser, position, channel, remoteAddress);
         }
         return decodeMessage(parser, position, channel, remoteAddress);
     }

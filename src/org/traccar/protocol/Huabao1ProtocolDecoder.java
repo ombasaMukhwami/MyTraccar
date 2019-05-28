@@ -11,7 +11,7 @@ import java.net.SocketAddress;
 public class Huabao1ProtocolDecoder extends BaseProtocolDecoder {
 
     private final Huabao1TextProtocolDecoder textProtocolDecoder;
-    private final HuabaoProtocolDecoder binaryProtocolDecoder;
+    private final HuabaoProtocolDecoder binaryProtocolDecoder; //Huabao1BinaryProtocolDecoder
 
     public Huabao1ProtocolDecoder(Protocol protocol) {
         super(protocol);

@@ -90,17 +90,25 @@
     </entry>
 
     <!-- Navigate -->
-    <entry key='tr11.port'>8992</entry>
+
     <entry key='sinotrack.port'>3299</entry>
     <entry key='queclink.port'>13979</entry>
-    <entry key='dalcomomata.port'>8991</entry>
-    <entry key='safariwatch.port'>8994</entry>
     <entry key='sabo.port'>8990</entry>
+    <entry key='dalcomomata.port'>8991</entry>
+    <entry key='tr11.port'>8992</entry>
+    <entry key='safariwatch.port'>8994</entry>
+    <entry key='paymatic.port'>8988</entry>
+    <entry key='huabao1.port'>8981</entry>
     <entry key='smartfast.port'>8987</entry>
+    <entry key='jendie.port'>8982</entry>
+    <!--<entry key='batton.port'>8981</entry>-->
+    <!--<entry key='saferider.port'>8983</entry>-->
+    <entry key='trident.port'>8984</entry>
     <entry key='portman.port'>18005</entry>
     <entry key='wlttramigo.port'>9556</entry>
+
     <!--<entry key='ntsahuabao.port'>8988</entry>-->
-    <entry key='huabao1.port'>8988</entry>
+
 
     <!-- 3.xx -->
     <entry key='gps103.port'>9001</entry>
@@ -136,6 +144,7 @@
     <entry key='gpsgate.port'>9026</entry>
 
     <entry key='teltonika.port'>12070</entry>
+    <entry key='teltonika1.port'>8985</entry>
 
     <entry key='mta6.port'>9028</entry>
     <entry key='tzone.port'>9029</entry>
@@ -148,7 +157,8 @@
     <entry key='tk102.port'>9036</entry>
     <entry key='intellitrac.port'>9037</entry>
     <entry key='gpsmta.port'>9038</entry>
-    <entry key='wialon.port'>9039</entry>
+    <!--<entry key='wialon.port'>9039</entry>-->
+    <entry key='wialon1.port'>9039</entry>
     <entry key='carscop.port'>9040</entry>
     <entry key='apel.port'>9041</entry>
     <entry key='manpower.port'>9042</entry>

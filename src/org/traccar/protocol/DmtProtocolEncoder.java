@@ -2,7 +2,6 @@ package org.traccar.protocol;
 
 import org.traccar.BaseProtocolEncoder;
 import org.traccar.helper.Checksum;
-import org.traccar.helper.DataConverter;
 import org.traccar.model.Command;
 
 import io.netty.buffer.ByteBuf;
