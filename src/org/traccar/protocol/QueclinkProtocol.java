@@ -34,18 +34,18 @@ public class QueclinkProtocol extends BaseProtocol {
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new QueclinkFrameDecoder());
+                pipeline.addLast(new Gl200FrameDecoder());
                 pipeline.addLast(new StringEncoder());
-                pipeline.addLast(new QueclinkProtocolEncoder());
-                pipeline.addLast(new QueclinkProtocolDecoder(QueclinkProtocol.this));
+                pipeline.addLast(new Gl200ProtocolEncoder());
+                pipeline.addLast(new Gl200ProtocolDecoder(QueclinkProtocol.this));
             }
         });
         addServer(new TrackerServer(true, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new StringEncoder());
-                pipeline.addLast(new QueclinkProtocolEncoder());
-                pipeline.addLast(new QueclinkProtocolDecoder(QueclinkProtocol.this));
+                pipeline.addLast(new Gl200ProtocolEncoder());
+                pipeline.addLast(new Gl200ProtocolDecoder(QueclinkProtocol.this));
             }
         });
     }

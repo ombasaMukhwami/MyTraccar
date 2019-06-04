@@ -11,6 +11,9 @@ public class AtrackProtocolDecoderTest extends ProtocolTest {
         AtrackProtocolDecoder decoder = new AtrackProtocolDecoder(null);
 
         verifyPositions(decoder, buffer(
+                "@P,93D1,419,0,357766091026083,1557178589,1557178590,1557178590,-121899637,37406241,338,230,2809,8,0,0,0,0,,2000,2000,\r\n"));
+
+        verifyPositions(decoder, buffer(
                 "@P,3A34,146,41431,353816057242284,20180622015809,20180622015809,20180622015809,9720689,4014230,61,2,0,20,1,0,0,0,0,2000,2000,12160,42,624,002,20009,20014,\r\n"));
 
         verifyPositions(decoder, buffer(
@@ -33,6 +36,9 @@ public class AtrackProtocolDecoderTest extends ProtocolTest {
         decoder.setLongDate(false);
 
         decoder.setCustom(true);
+
+        verifyPositions(decoder, buffer(
+                "@P,9493,402,143,356961075931165,1546830150,1546830151,1546830151,-88429209,44271154,54,10,0,10,1,0,0,0,1858AE010000,2000,2000,\u001A,%CI%FL%ML%VN%PD%FC%EL%ET%AT%MF%MV%BV%DT%GN%GV%ME%RL%RP%SA%SM%TR%IA%MP,0,0,2T1KR32E28C706185,0,1,0,7,251,89,118,41,0,00A5001A040800A5001A040B00A5001A040C00A5001A040900A4001C040D00A50019040900A60019040900A4001B040B00A5001A040900A7001A040E\u001A,008CFE7C03C4\u001A,356961075931165,0,0,12,0,18,5,0\n"));
 
         verifyPositions(decoder, buffer(
                 "@P,FD34,720,12256,357520076794151,1535445349,1535445354,1535500603,106784149,-6283086,105,2,138,0,3,0,0,0,,2000,2000,,%CI%TR%MV%BV%AT%SA%ET%GQ%GS%PC%RP%OD%AV1%XS%VS,0,0,0,0,0,0,0,0,1011677,0,138,0,0,0\r\n",
@@ -90,6 +96,25 @@ public class AtrackProtocolDecoderTest extends ProtocolTest {
 
         verifyAttributes(decoder, buffer(
                 "$ERROR=101\r\n"));
+
+    }
+
+    @Test
+    public void testDecodeCustom() throws Exception {
+
+        AtrackProtocolDecoder decoder = new AtrackProtocolDecoder(null);
+
+        decoder.setCustom(true);
+
+        decoder.setForm("%AT%BV%MV%SA%VN%PD%IA%MP%EL%ET%FC%FL%RP%ML%MF%TR%EH%DL%EG%HA%HB%HC%IP%MT");
+
+        verifyPositions(decoder, buffer(
+                "@P,7E02,186,0,357766091026083,1558908265,1558908266,1558908266,-121900220,37407524,175,2,6,6,1,39,0,0,,2000,2000, ,3,40,142,12,JN8AZ1MU1BW066090,0,30,0,58,90,22,72,1187,0,1232,9,409,0,1,0,0,0,0,1\r\n"));
+
+        decoder.setForm("%AT%BV%CD%CE%CM%CN%DT%GN%GQ%GS%GV%LC%ME%MV%RL%SA%SM%CS%HT%VN%PD%IA%MP%EL%ET%FC%FL%RP%ML%MF%TR%EH%CR%DL%EG%HA%HB%HC%IP%MT%PF");
+
+        verifyPositions(decoder, buffer(
+                "@P,DCCE,422,5818,357766091026083,1557904779,1557904780,1557904780,-121899644,37406291,129,2,21,10,0,0,0,0,,2000,2000,,13,40,8942310017000752067,21096194,295050910083206,310260,0,FF00001F0393FF01001E0395FF01001E0394FF01001F0393FF02001D0393FF00001F0394FF0100200394FF01001F0393FF02001F0395FF0100200394,20,10,002C005C03B4,14953,357766091026083,125,38,11,0,1,Device:Fail,JN8AZ1MU1BW066090,0,0,0,0,0,99,0,0,0,0,0,264,5,0,0,0,0,0,0,0,0\r\n"));
 
     }
 

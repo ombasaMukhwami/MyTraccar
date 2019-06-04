@@ -98,10 +98,10 @@
     <entry key='tr11.port'>8992</entry>
     <entry key='safariwatch.port'>8994</entry>
     <entry key='paymatic.port'>8988</entry>
-    <entry key='huabao1.port'>8981</entry>
+    <!--<entry key='huabao1.port'>8981</entry>-->
     <entry key='smartfast.port'>8987</entry>
     <entry key='jendie.port'>8982</entry>
-    <!--<entry key='batton.port'>8981</entry>-->
+    <entry key='batton.port'>8981</entry>
     <!--<entry key='saferider.port'>8983</entry>-->
     <entry key='trident.port'>8984</entry>
     <entry key='mock.port'>8980</entry>
@@ -109,6 +109,10 @@
     <entry key='centro.port'>8978</entry>
     <entry key='inter.port'>8977</entry>
     <entry key='controltech.port'>8976</entry>
+    <entry key='flex.port'>8975</entry>
+    <entry key='numero.port'>8974</entry>
+    <entry key='hgspeed.port'>8973</entry>
+
 
     <entry key='portman.port'>18005</entry>
     <entry key='wlttramigo.port'>9556</entry>

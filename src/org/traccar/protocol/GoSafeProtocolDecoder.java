@@ -67,7 +67,8 @@ public class GoSafeProtocolDecoder extends BaseProtocolDecoder {
             .any()
             .compile();
 
-    private void decodeFragment(Position position, String fragment) {
+
+    private void decodeFragment(Position position, String fragment, boolean takeSecond) {
         int dataIndex = fragment.indexOf(':');
         int index = 0;
         String[] values;
@@ -134,18 +135,34 @@ public class GoSafeProtocolDecoder extends BaseProtocolDecoder {
                 }
                 break;
             case "DTT":
-                position.set(Position.KEY_STATUS, Integer.parseInt(values[index++], 16));
-                if (!values[index++].isEmpty()) {
-                    int io = Integer.parseInt(values[index - 1], 16);
-                    position.set(Position.KEY_IGNITION, BitUtil.check(io, 0));
-                    position.set(Position.PREFIX_IN + 1, BitUtil.check(io, 1));
-                    position.set(Position.PREFIX_IN + 2, BitUtil.check(io, 2));
-                    position.set(Position.PREFIX_IN + 3, BitUtil.check(io, 3));
-                    position.set(Position.PREFIX_IN + 4, BitUtil.check(io, 4));
-                    position.set(Position.PREFIX_OUT + 1, BitUtil.check(io, 5));
-                    position.set(Position.PREFIX_OUT + 2, BitUtil.check(io, 6));
-                    position.set(Position.PREFIX_OUT + 3, BitUtil.check(io, 7));
+                int io = 0;
+                //position.set(Position.KEY_STATUS, Integer.parseInt(values[index++], 16));
+                if (takeSecond) {
+                    if (!values[index++].isEmpty()) {
+                        io = Integer.parseInt(values[index - 1], 16);
+                        position.set(Position.KEY_MOTION, BitUtil.check(io, 2));
+                        position.set(Position.KEY_IGNITION, BitUtil.check(io, 13));
+                    }
+                } else  {
+                    if (!values[index++].isEmpty()) {
+                        String val = values[index++];
+
+                        if (val.isEmpty()) {
+                            val = values[0];
+                        }
+                        io = Integer.parseInt(val, 16);
+                        position.set(Position.KEY_IGNITION, BitUtil.check(io, 0));
+                        //position.set(Position.PREFIX_IN + 1, BitUtil.check(io, 1)); //Reserved
+                        //position.set(Position.PREFIX_IN + 2, BitUtil.check(io, 2)); //Reserved
+                        //position.set(Position.PREFIX_IN + 3, BitUtil.check(io, 3)); //Reserved
+                        //position.set(Position.PREFIX_IN + 4, BitUtil.check(io, 4)); //Reserved
+                        position.set(Position.PREFIX_OUT + 1, BitUtil.check(io, 5));
+                        //position.set(Position.PREFIX_OUT + 2, BitUtil.check(io, 6)); //Reserved
+                        //position.set(Position.PREFIX_OUT + 3, BitUtil.check(io, 7)); //Reserved
+                    }
                 }
+
+                position.set(Position.KEY_STATUS, io);
                 position.set(Position.KEY_GEOFENCE, values[index++] + values[index++]);
                 position.set("eventStatus", values[index++]);
                 if (index < values.length) {
@@ -171,7 +188,7 @@ public class GoSafeProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    private Object decodeData(DeviceSession deviceSession, Date time, String data) {
+    private Object decodeData(DeviceSession deviceSession, Date time, String data, boolean takeSecond) {
 
         List<Position> positions = new LinkedList<>();
         Position position = null;
@@ -200,7 +217,7 @@ public class GoSafeProtocolDecoder extends BaseProtocolDecoder {
 
             } else {
 
-                decodeFragment(position, fragments[index++]);
+                decodeFragment(position, fragments[index++], takeSecond);
 
             }
 
@@ -220,13 +237,15 @@ public class GoSafeProtocolDecoder extends BaseProtocolDecoder {
         if (channel != null) {
             channel.writeAndFlush(new NetworkMessage("1234", remoteAddress));
         }
-
+        boolean takeSecond = false;
         String sentence = (String) msg;
         Pattern pattern = PATTERN;
         if (sentence.startsWith("*GS02")) {
             pattern = PATTERN_OLD;
         }
-
+        if (sentence.startsWith("*GS46") || sentence.startsWith("*GS16")) {
+            takeSecond = true;
+        }
         Parser parser = new Parser(pattern, (String) msg);
         if (!parser.matches()) {
             return null;
@@ -265,7 +284,7 @@ public class GoSafeProtocolDecoder extends BaseProtocolDecoder {
                 time = parser.nextDateTime(Parser.DateTimeFormat.HMS_DMY);
             }
 
-            return decodeData(deviceSession, time, parser.next());
+            return decodeData(deviceSession, time, parser.next(), takeSecond);
 
         }
     }

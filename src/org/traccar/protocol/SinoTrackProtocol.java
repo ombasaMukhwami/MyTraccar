@@ -36,18 +36,18 @@ public class SinoTrackProtocol extends BaseProtocol {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 int messageLength = Context.getConfig().getInteger(getName() + ".messageLength");
-                pipeline.addLast(new SinoTrackFrameDecoder(messageLength));
+                pipeline.addLast(new H02FrameDecoder(messageLength));
                 pipeline.addLast(new StringEncoder());
-                pipeline.addLast(new SinoTrackProtocolEncoder());
-                pipeline.addLast(new SinoTrackProtocolDecoder(SinoTrackProtocol.this));
+                pipeline.addLast(new H02ProtocolEncoder());
+                pipeline.addLast(new H02ProtocolDecoder(SinoTrackProtocol.this));
             }
         });
         addServer(new TrackerServer(true, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new StringEncoder());
-                pipeline.addLast(new SinoTrackProtocolEncoder());
-                pipeline.addLast(new SinoTrackProtocolDecoder(SinoTrackProtocol.this));
+                pipeline.addLast(new H02ProtocolEncoder());
+                pipeline.addLast(new H02ProtocolDecoder(SinoTrackProtocol.this));
             }
         });
     }

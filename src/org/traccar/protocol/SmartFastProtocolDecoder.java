@@ -22,7 +22,7 @@ public class SmartFastProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private static final Pattern PATTERN = new PatternBuilder()
-            .number("(dddd)/(dd)/(dd),")         // date (yymmdd)
+            .number("(dd)/(dd)/(dd),")         // date (yymmdd)
             .number("(dd):(dd):(dd),")           // time (hhmmss)
             .number("(d+),")                     // imei
             .expression("(.+),")                 //VendorId
@@ -37,7 +37,21 @@ public class SmartFastProtocolDecoder extends BaseProtocolDecoder {
             .any()
             .compile();
 
-
+    private static final Pattern PATTERN_NEXT = new PatternBuilder()
+            .number("(dd)/(dd)/(dd),")         // date (yymmdd)
+            .number("(dd):(dd):(dd),")           // time (hhmmss)
+            .number("(d+),")                     // imei
+            .expression("(.+)?,")                 //VendorId
+            .expression("(.+)?,")                 //Vehicle registration
+            .number("(d+),")                    // speed
+            .number("(-?d+.d+) ")               // Longitute
+            .expression("([EW]),")               //direction
+            .number("(-?d+.d+) ")               // latitute
+            .expression("([NS]),")               //Direction
+            .number("([01]),")                  //ignition
+            .number("([01])")                  //Power status
+            .any()
+            .compile();
 
 
     private Object decodeMessage(Parser parser, Position position, Channel channel, SocketAddress remoteAddress) {
@@ -74,18 +88,47 @@ public class SmartFastProtocolDecoder extends BaseProtocolDecoder {
         position.setLatitude(lat);
         return position;
     }
+    private Object decodeNext(Parser parser, Position position, Channel channel, SocketAddress remoteAddress) {
+
+        position.setTime(parser.nextDateTime(Parser.DateTimeFormat.YMD_HMS));
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        if (deviceSession == null) {
+            return null;
+        }
+        String latDir, lonDir;
+        position.setDeviceId(deviceSession.getDeviceId());
+        position.set(Position.KEY_VENDORID, parser.next());
+        position.set(Position.KEY_VEHICLE_REGISTRATION, parser.next());
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt()));
+        position.setLongitude(parser.nextDouble());
+        lonDir = parser.next();
+        position.set(Position.KEY_LONGITUTE_DIRECTION, lonDir);
+        position.setLatitude(parser.nextDouble());
+        latDir = parser.next();
+        position.set(Position.KEY_LATITUTE_DIRECTION, latDir);
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        position.set(Position.KEY_STATUS, parser.next());
+        position.set(Position.KEY_GOVERNOR, 1);
+        return position;
+    }
 
     @Override
     protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
         String sentence = (String) msg;
-        sentence = "20" + sentence;
+        //sentence = "20" + sentence;
+        Position position = new Position(getProtocolName());
         Pattern pattern = PATTERN;
         Parser parser = new Parser(pattern, sentence);
         if (!parser.matches()) {
-            return null;
+            pattern = PATTERN_NEXT;
+            parser = new Parser(pattern, sentence);
+            if (!parser.matches()) {
+                return null;
+            }
+            return decodeNext(parser, position, channel, remoteAddress);
         }
-        Position position = new Position(getProtocolName());
+
         return decodeMessage(parser, position, channel, remoteAddress);
 
     }

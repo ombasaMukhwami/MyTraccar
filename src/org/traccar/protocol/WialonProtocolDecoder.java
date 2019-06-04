@@ -94,7 +94,7 @@ public class WialonProtocolDecoder extends BaseProtocolDecoder {
 
     private static final Pattern PATTERN_X = new PatternBuilder()
             .number("(dd)(dd)(dd),")             //date (ddmmyy)
-            .number("(d{1,2}):(d{1,2}):(d{1,2}),")           //time (hhmmss)
+            .number("(d{1,3}):(d{1,2}):(d{1,2}),")           //time (hhmmss)
             .number("(d+),")                     //imei
             .expression("(.+),")                 //VendorId
             .expression("(.+),")                 //Vehicle registration

@@ -542,7 +542,7 @@ public class H02ProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    public Object startDecode(Channel channel, SocketAddress remoteAddress, Object msg) {
+    private Object startDecode(Channel channel, SocketAddress remoteAddress, Object msg) {
         ByteBuf buf = (ByteBuf) msg;
         String marker = buf.toString(0, 1, StandardCharsets.US_ASCII);
 

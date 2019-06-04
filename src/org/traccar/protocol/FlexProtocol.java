@@ -7,16 +7,16 @@ import org.traccar.CharacterDelimiterFrameDecoder;
 import org.traccar.PipelineBuilder;
 import org.traccar.TrackerServer;
 
-public class MockProtocol extends BaseProtocol {
+public class FlexProtocol extends BaseProtocol {
 
-    public MockProtocol() {
+    public FlexProtocol() {
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new CharacterDelimiterFrameDecoder(1024,  false,  "\r\n"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
-                pipeline.addLast(new SmartFastProtocolDecoder(MockProtocol.this));
+                pipeline.addLast(new SmartFastProtocolDecoder(FlexProtocol.this));
             }
         });
         addServer(new TrackerServer(true, getName()) {
@@ -25,7 +25,7 @@ public class MockProtocol extends BaseProtocol {
                 pipeline.addLast(new CharacterDelimiterFrameDecoder(1024, false,  "\r\n"));
                 pipeline.addLast(new StringEncoder());
                 pipeline.addLast(new StringDecoder());
-                pipeline.addLast(new SmartFastProtocolDecoder(MockProtocol.this));
+                pipeline.addLast(new SmartFastProtocolDecoder(FlexProtocol.this));
             }
         });
     }

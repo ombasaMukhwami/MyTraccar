@@ -17,7 +17,7 @@ public class Huabao1FrameDecoder extends BaseFrameDecoder {
     private static final int MINIMUM_LENGTH = 11;
 
     private static final Set<String> BINARY_HEADERS = new HashSet<>(
-            Arrays.asList("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"));
+            Arrays.asList("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "20"));
 
     public static boolean isBinary(ByteBuf buf) {
         String header = buf.toString(buf.readerIndex(), 2, StandardCharsets.US_ASCII);

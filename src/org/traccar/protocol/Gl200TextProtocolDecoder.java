@@ -1145,7 +1145,7 @@ public class Gl200TextProtocolDecoder extends BaseProtocolDecoder {
         return position;
     }
 
-    public Object startDecode(
+    private Object startDecode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
         String sentence = ((ByteBuf) msg).toString(StandardCharsets.US_ASCII);
         int typeIndex = sentence.indexOf(":GT");
