@@ -331,6 +331,8 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
                 return Position.ALARM_ACCELERATION;
             case 0x30:
                 return Position.ALARM_BRAKING;
+            case 0x0C:
+                return Position.ALARM_POWER_ON;
             case 0x2A:
             case 0x2B:
                 return Position.ALARM_CORNERING;

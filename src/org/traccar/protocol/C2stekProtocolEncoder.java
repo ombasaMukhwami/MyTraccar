@@ -9,7 +9,7 @@ public class C2stekProtocolEncoder extends StringProtocolEncoder {
     protected Object encodeCommand(Command command) {
 
         switch (command.getType()) {
-                 case Command.TYPE_CUSTOM:
+            case Command.TYPE_CUSTOM:
                 return formatCommand(command, "{%s}", Command.KEY_DATA);
             case Command.TYPE_ALARM_ARM:
                 return formatCommand(command, "{%s}", Command.TYPE_ALARM_ARM);

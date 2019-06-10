@@ -170,6 +170,7 @@ public class Jt600ProtocolDecoder extends BaseProtocolDecoder {
                 if (protocolVersion == 0x17) {
                     buf.readUnsignedByte(); // geofence id
                     buf.skipBytes(3); // reserved
+                    buf.skipBytes(buf.readableBytes() - 1);
                 }
 
             } else if (version == 1) {
