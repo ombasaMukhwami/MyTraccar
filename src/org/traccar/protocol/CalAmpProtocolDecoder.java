@@ -153,7 +153,7 @@ public class CalAmpProtocolDecoder extends BaseProtocolDecoder {
             int content = buf.readUnsignedByte();
 
             if (BitUtil.check(content, 0)) {
-                String id = ByteBufUtil.hexDump(buf.readSlice(buf.readUnsignedByte()));
+                String id = ByteBufUtil.hexDump(buf.readSlice(buf.readUnsignedByte())).replace("f", "");
                 getDeviceSession(channel, remoteAddress, id);
             }
 

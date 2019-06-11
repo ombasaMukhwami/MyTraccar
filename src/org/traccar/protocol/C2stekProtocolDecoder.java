@@ -116,13 +116,9 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
             .number("(d+.d+)#")                  // course
             .number("(-?d+.d+)#")                // altitude
             .number("(d+)#")                     // battery
-            .number("d+#")                       // geo area alarm
-            .number("(x+)#")                     // alarm
+            .number("([01])")                    // alarm arm/disarm
             .number("([01])")                    // door
-            .number("([01])")                   // ignition
-            .expression(".#")                   //Task Number
-            .text("B")
-            .number("(dd)")
+            .number("([01])#")                   // ignition
             .number("(d+)")
             .text("$AP")
             .compile();
@@ -164,7 +160,37 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
                 return null;
         }
     }
+    private Object decodeOdm(Channel channel, SocketAddress remoteAddress, String sentence) {
 
+        Parser parser = new Parser(PATTERN_ODM, sentence);
+        if (!parser.matches()) {
+            return null;
+        }
+        String imei = parser.next();
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, imei);
+        if (deviceSession == null) {
+            return null;
+        }
+
+        Position position = new Position(getProtocolName());
+        position.setDeviceId(deviceSession.getDeviceId());
+
+        position.setTime(parser.nextDateTime());
+        position.setValid(parser.nextInt() > 0);
+        position.setLatitude(parser.nextDouble());
+        position.setLongitude(parser.nextDouble());
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextDouble()));
+        position.setCourse(parser.nextDouble());
+        position.setAltitude(parser.nextDouble());
+        position.set(Position.KEY_BATTERY, parser.nextInt() * 0.001);
+        position.set(Position.KEY_ARMED, parser.nextInt() > 0);
+        position.set(Position.KEY_DOOR, parser.nextInt() > 0);
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+        int alarm = parser.nextHexInt();
+        position.set(Position.KEY_ALARM, decodeAlarm(alarm));
+        sendReply(channel, remoteAddress, position, imei);
+        return  position;
+    }
     private Object decodeBasic(Channel channel, SocketAddress remoteAddress, String sentence) {
 
         Parser parser = new Parser(PATTERN, sentence);
@@ -234,11 +260,12 @@ public class C2stekProtocolDecoder  extends BaseProtocolDecoder {
 
         return  position;
     }
+
     private Object decodeExtra(Channel channel, SocketAddress remoteAddress, String sentence) {
 
         Parser parser = new Parser(PATTERN_EXTRA, sentence);
         if (!parser.matches()) {
-            return null;
+           return decodeOdm(channel, remoteAddress, sentence);
         }
 
         String imei = parser.next();
