@@ -63,7 +63,7 @@ public class PiligrimProtocolDecoder extends BaseProtocolDecoder {
         FullHttpRequest request = (FullHttpRequest) msg;
         String uri = request.uri();
 
-        if (uri.startsWith("/config")) {
+        if (uri.startsWith("/org/traccar/config")) {
 
             sendResponse(channel, "CONFIG: OK");
 

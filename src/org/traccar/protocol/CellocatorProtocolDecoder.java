@@ -119,7 +119,7 @@ public class CellocatorProtocolDecoder extends BaseProtocolDecoder {
 
         position.set(Position.KEY_VERSION_HW, buf.readUnsignedByte());
         position.set(Position.KEY_VERSION_FW, buf.readUnsignedByte());
-        buf.readUnsignedByte(); // protocol version
+        position.set(Position.KEY_ALARM, buf.readUnsignedByte()); // protocol version
 
         position.set(Position.KEY_STATUS, buf.readUnsignedByte() & 0x0f);
 

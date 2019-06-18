@@ -35,7 +35,7 @@ public class EsealProtocolDecoder extends BaseProtocolDecoder {
 
     public EsealProtocolDecoder(Protocol protocol) {
         super(protocol);
-        config = Context.getConfig().getString(getProtocolName() + ".config");
+        config = Context.getConfig().getString(getProtocolName() + ".org.traccar.config");
     }
 
     private static final Pattern PATTERN = new PatternBuilder()

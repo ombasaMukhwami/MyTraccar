@@ -324,4 +324,5 @@
     <entry key='techtlt.port'>9189</entry>
     <entry key='starcom.port'>5190</entry>
     <entry key='mictrack.port'>5191</entry>
+    <entry key='plugin.port'>9192</entry>
 </properties>

@@ -147,7 +147,7 @@ public class OigoProtocolDecoder extends BaseProtocolDecoder {
         }
 
         if (BitUtil.check(mask, 15)) {
-            buf.readUnsignedShort(); // device config
+            buf.readUnsignedShort(); // device org.traccar.config
         }
 
         return position;

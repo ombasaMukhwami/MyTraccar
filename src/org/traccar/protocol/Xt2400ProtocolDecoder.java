@@ -38,7 +38,7 @@ public class Xt2400ProtocolDecoder extends BaseProtocolDecoder {
     public Xt2400ProtocolDecoder(Protocol protocol) {
         super(protocol);
 
-        String config = Context.getConfig().getString(getProtocolName() + ".config");
+        String config = Context.getConfig().getString(getProtocolName() + ".org.traccar.config");
         if (config != null) {
             setConfig(config);
         }

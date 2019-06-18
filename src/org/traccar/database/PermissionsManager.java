@@ -111,7 +111,7 @@ public class PermissionsManager {
         try {
             server = dataManager.getServer();
         } catch (SQLException error) {
-            LOGGER.warn("Refresh server config error", error);
+            LOGGER.warn("Refresh server org.traccar.config error", error);
         }
     }
 
