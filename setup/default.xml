@@ -112,7 +112,8 @@
     <entry key='flex.port'>8975</entry>
     <entry key='numero.port'>8974</entry>
     <entry key='hgspeed.port'>8973</entry>
-
+    <entry key='itrackafrica.port'>8972</entry>
+    <entry key='karibia.port'>8971</entry>
 
     <entry key='portman.port'>18005</entry>
     <entry key='wlttramigo.port'>9556</entry>
