@@ -36,19 +36,12 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
         super(protocol);
     }
 
-    public static final int MSG_LOCATING = 0x30;
-    public static final int MSG_SHAKE_HAND_RESPONSE = 0x21;
     public static final int MSG_SETUP_ACC = 0x34;
-    public static final int MSG_DISABLE_IMMOBILIZER = 0x38;
-    public static final int MSG_IMMOBILIZER = 0x39;
-    public static final int MSG_VOICE_MONITOR = 0x3E;
     public static final int MSG_CANCEL_ALARM = 0x37;
     public static final int MSG_SHAKE_HAND_REQUEST = 0xB1;
     public static final int MSG_POSITION_DATA = 0x81;
     public static final int MSG_POSITION = 0x80;
-    public static final int MSG_TRACKER_CONFIRMATION = 0x85;
-    public static final int MSG_SETUP_ACC_ON_LCATION_UPDATE = 0x38;
-    public static final int MSG_END = 0x0D;
+    public static final int MSG_POSITION_1 = 0x8B;
     public static final int MSG_LENGTH_TO_SEND = 0x05;
 
     public byte verify(byte[] b) {
@@ -107,11 +100,9 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
           System.out.print("Test");
         } else if (type == MSG_SETUP_ACC) {
             System.out.print("Test");
-        } else if (type == MSG_POSITION_DATA || type == MSG_POSITION) {
-
+        } else if (type == MSG_POSITION_DATA || type == MSG_POSITION || type == MSG_POSITION_1 ) {
 
             String deviceId = getDeviceId(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte());
-
             //String deviceId =  ByteBufUtil.hexDump(buf.readSlice(4));
             DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceId);
             if (deviceSession == null) {

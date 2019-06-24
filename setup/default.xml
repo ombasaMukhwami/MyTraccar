@@ -114,7 +114,7 @@
     <entry key='hgspeed.port'>8973</entry>
     <entry key='itrackafrica.port'>8972</entry>
     <entry key='karibia.port'>8971</entry>
-
+    <entry key='bsl.port'>8970</entry>
     <entry key='portman.port'>18005</entry>
     <entry key='wlttramigo.port'>9556</entry>
 
