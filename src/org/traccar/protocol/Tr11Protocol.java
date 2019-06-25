@@ -25,7 +25,8 @@ public class Tr11Protocol  extends BaseProtocol {
         addServer(new TrackerServer(false, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                   pipeline.addLast(new Tr11ProtocolDecoder(Tr11Protocol.this));
+                pipeline.addLast(new Tr11FrameDecoder());
+                pipeline.addLast(new Tr11ProtocolDecoder(Tr11Protocol.this));
             }
         });
     }

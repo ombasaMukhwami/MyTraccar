@@ -100,7 +100,7 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
           System.out.print("Test");
         } else if (type == MSG_SETUP_ACC) {
             System.out.print("Test");
-        } else if (type == MSG_POSITION_DATA || type == MSG_POSITION || type == MSG_POSITION_1 ) {
+        } else if (type == MSG_POSITION_DATA || type == MSG_POSITION || type == MSG_POSITION_1) {
 
             String deviceId = getDeviceId(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte());
             //String deviceId =  ByteBufUtil.hexDump(buf.readSlice(4));

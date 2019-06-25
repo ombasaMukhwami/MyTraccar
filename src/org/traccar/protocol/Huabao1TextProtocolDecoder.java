@@ -94,6 +94,64 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
             .any()
             .compile();
 
+    private static final Pattern PATTERN_KARIBIA = new PatternBuilder()
+            .number("(dd)/(dd)/(dd),")         // date (ddmmyyyy)
+            .number("(dd):(dd):(dd),")           // time (hhmmss)
+            .number("(d+),")                     // imei
+            .expression("(.+),")                 //VendorId
+            .expression("(.+),")                 //Vehicle registration
+            .number("(d+),")                     // speed
+            .number("(d+.d+),")                    // Longitute
+            .expression("([NS]),")               //direction
+            .number("(d+.d+),")                  // Latitute
+            .expression("([EW]),")               //Direction
+            .number("([01]),")                  //Power Connection(1 diconnected, 0 connected)
+            .number("([01]),")                  //Speed Signal (0 disconnected
+            .number("(d+),")                   //Course
+            .number("([01]),")                 //Ignition status 1-on, 0 off
+            .number("([01])")                  //Antennar disconnection 1 disconnected
+            .any()
+            .compile();
+
+    public Object decodeKaribia(Parser parser, Position position, Channel channel, SocketAddress remoteAddress) throws Exception {
+        position.setTime(parser.nextDateTime(Parser.DateTimeFormat.MDY_HMS));
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
+        if (deviceSession == null) {
+            return null;
+        }
+        double lat, lon;
+        String latDir, lonDir;
+        position.setDeviceId(deviceSession.getDeviceId());
+        position.set(Position.KEY_VENDORID, parser.next());
+        position.set(Position.KEY_VEHICLE_REGISTRATION, parser.next());
+        position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt()));
+        lon = parser.nextDouble();
+        latDir = parser.next();
+        lat = parser.nextDouble();
+        lonDir = parser.next();
+        position.set(Position.KEY_POWER_SOURCE, parser.nextInt());
+        position.set(Position.KEY_SPEED_SOURCE, parser.nextInt());
+        position.setCourse(parser.nextInt());
+        position.set(Position.KEY_STATUS, parser.next());
+        position.set(Position.KEY_IGNITION, parser.nextInt() > 0);
+       // String test = parser.next();
+       // position.set(Position.KEY_ANTENNA, test);
+        position.set(Position.KEY_GOVERNOR, 1);
+        if (latDir.equalsIgnoreCase("S")) {
+            lat = -1 * lat;
+        }
+
+        if (lonDir.equalsIgnoreCase("W")) {
+            lon = -1 * lon;
+        }
+        position.setLongitude(lon);
+        position.setLatitude(lat);
+        position.set(Position.KEY_LONGITUTE_DIRECTION, lonDir);
+        position.set(Position.KEY_LATITUTE_DIRECTION, latDir);
+
+        return position;
+    }
+
     private String decodeAlarm(String alarm) {
 
         switch (alarm) {
@@ -120,6 +178,8 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
                     return  null;
         }
     }
+
+
     public Object decodeEvent(Parser parser, Position position, Channel channel, SocketAddress remoteAddress) throws Exception {
         position.setTime(parser.nextDateTime(Parser.DateTimeFormat.YMD_HMS));
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, parser.next());
@@ -279,7 +339,12 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
                     pattern = PATTERN_EVENT;
                     parser = new Parser(pattern, sentence);
                     if (!parser.matches()) {
-                        return null;
+                        pattern = PATTERN_KARIBIA;
+                        parser = new Parser(pattern, sentence);
+                        if (!parser.matches()) {
+                            return null;
+                        }
+                        return decodeKaribia(parser, position, channel, remoteAddress);
                     }
                     return decodeEvent(parser, position, channel, remoteAddress);
                 }

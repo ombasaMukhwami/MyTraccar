@@ -104,6 +104,7 @@ public class Position extends Message {
     public static final String KEY_CONNECTOR = "connector";
     public static final String KEY_ENCLOSURE = "enclosure";
     public static final String KEY_SPEED_SOURCE = "speedSource";
+    public static final String KEY_POWER_SOURCE = "powerSource";
     public static final String KEY_CALLIBRATION = "callibration";
     public static final String KEY_SPEED_LIMIT = "speedLimit";
     public static final String KEY_GPS_SPEED = "gpsSpeed";
