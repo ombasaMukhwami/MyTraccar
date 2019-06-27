@@ -125,9 +125,9 @@ public class Huabao1TextProtocolDecoder extends BaseProtocolDecoder {
         position.set(Position.KEY_VENDORID, parser.next());
         position.set(Position.KEY_VEHICLE_REGISTRATION, parser.next());
         position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt()));
-        lon = parser.nextDouble();
-        latDir = parser.next();
         lat = parser.nextDouble();
+        latDir = parser.next();
+        lon = parser.nextDouble();
         lonDir = parser.next();
         position.set(Position.KEY_POWER_SOURCE, parser.nextInt());
         position.set(Position.KEY_SPEED_SOURCE, parser.nextInt());
