@@ -40,6 +40,7 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_CANCEL_ALARM = 0x37;
     public static final int MSG_SHAKE_HAND_REQUEST = 0xB1;
     public static final int MSG_POSITION_DATA = 0x81;
+    public static final int MSG_POSITION_DATA1 = 0x8E;
     public static final int MSG_POSITION = 0x80;
     public static final int MSG_POSITION_1 = 0x8B;
     public static final int MSG_LENGTH_TO_SEND = 0x05;
@@ -96,11 +97,7 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
 
             channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
             return null;
-        } else if (type == MSG_CANCEL_ALARM) {
-          System.out.print("Test");
-        } else if (type == MSG_SETUP_ACC) {
-            System.out.print("Test");
-        } else if (type == MSG_POSITION_DATA || type == MSG_POSITION || type == MSG_POSITION_1) {
+        }  else { //if (type == MSG_POSITION_DATA || type == MSG_POSITION_DATA1 || type == MSG_POSITION || type == MSG_POSITION_1) {
 
             String deviceId = getDeviceId(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte());
             //String deviceId =  ByteBufUtil.hexDump(buf.readSlice(4));
@@ -122,11 +119,15 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
             position.setTime(dateBuilder.getDate());
             lat = ByteBufUtil.hexDump(buf.readSlice(4));
             lon = ByteBufUtil.hexDump(buf.readSlice(4));
-            latH = lat.substring(0, 3);
+            int  bSouthWest = Integer.parseInt(lat.substring(0, 1));
+            latH = lat.substring(1, 3);
             latmin = lat.substring(3);
             lonh = lon.substring(0, 3);
             lonmin = lon.substring(3);
             latitute = Double.parseDouble(latH) + (Double.parseDouble(latmin) / (60 * 1000));
+            if (bSouthWest == 8) {
+                latitute = latitute * -1;
+            }
             longitute = Double.parseDouble(lonh) + (Double.parseDouble(lonmin) / (60 * 1000));
             position.setLatitude(latitute);
             position.setLongitude(longitute);
@@ -139,21 +140,15 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
             //String validAtennaPower ="01234567";
             int gps = Integer.parseInt(validAtennaPower.substring(0, 1));
             int antenna = Integer.parseInt(validAtennaPower.substring(1, 3));
-            int power = Integer.parseInt(validAtennaPower.substring(3, 5));
-
+            int powerStatus = Integer.parseInt(validAtennaPower.substring(3, 5));
              String a = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
             String b = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
             String c = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
             String d = Helper.toBinary(Integer.parseInt(ByteBufUtil.hexDump(buf.readSlice(1)),  16));
             int ignition = Integer.parseInt(a.substring(0, 1));
-            if (ignition == 1) {
-                position.set(Position.KEY_IGNITION, false);
-            } else {
-                position.set(Position.KEY_IGNITION, true);
-            }
+            position.set(Position.KEY_IGNITION, ignition == 0);
             position.set(Position.KEY_GPS, gps);
             position.set(Position.KEY_ANTENNA, antenna);
-
 
         }
         return position;

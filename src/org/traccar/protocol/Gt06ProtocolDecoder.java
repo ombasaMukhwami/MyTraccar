@@ -400,7 +400,7 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
     }
     private double getBatteryLevel(double bat) {
 
-        if(bat >= 2.95) {
+        if (bat >= 2.95) {
             return 100;
         } else if (bat == 2.93) {
             return 95;

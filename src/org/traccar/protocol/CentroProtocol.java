@@ -12,14 +12,14 @@ public class CentroProtocol extends BaseProtocol {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(1024, 2, 1, 1, 0));
-                pipeline.addLast(new SaboProtocolDecoder(CentroProtocol.this));
+                pipeline.addLast(new SaboTextProtocolDecoder(CentroProtocol.this));
             }
         });
         addServer(new TrackerServer(true, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(1024, 2, 1, 1, 0));
-                pipeline.addLast(new SaboProtocolDecoder(CentroProtocol.this));
+                pipeline.addLast(new SaboTextProtocolDecoder(CentroProtocol.this));
             }
         });
     }

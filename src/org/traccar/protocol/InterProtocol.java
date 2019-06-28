@@ -13,14 +13,14 @@ public class InterProtocol extends BaseProtocol {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(1024, 2, 1, 1, 0));
-                pipeline.addLast(new SaboProtocolDecoder(InterProtocol.this));
+                pipeline.addLast(new SaboTextProtocolDecoder(InterProtocol.this));
             }
         });
         addServer(new TrackerServer(true, getName()) {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(1024, 2, 1, 1, 0));
-                pipeline.addLast(new SaboProtocolDecoder(InterProtocol.this));
+                pipeline.addLast(new SaboTextProtocolDecoder(InterProtocol.this));
             }
         });
     }
