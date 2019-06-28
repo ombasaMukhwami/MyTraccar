@@ -398,7 +398,42 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
 
         return position;
     }
+    private double getBatteryLevel(double bat) {
 
+        if(bat >= 2.95) {
+            return 100;
+        } else if (bat == 2.93) {
+            return 95;
+        } else if (bat == 2.92) {
+            return 85;
+        } else if (bat == 2.91) {
+            return 75;
+        } else if (bat == 2.90) {
+            return 65;
+        } else if (bat == 2.89) {
+            return 55;
+        } else if (bat == 2.88) {
+            return 45;
+        } else if (bat == 2.86) {
+            return 40;
+        } else if (bat == 2.84) {
+            return 35;
+        } else if (bat == 2.81) {
+            return 30;
+        } else if (bat == 2.78) {
+            return 25;
+        } else if (bat == 2.74) {
+            return 20;
+        } else if (bat == 2.69) {
+            return 15;
+        } else if (bat == 2.62) {
+            return 10;
+        } else if (bat == 52) {
+            return 5;
+        } else {
+            return bat;
+        }
+    }
     private Object decodeBasic(Channel channel, SocketAddress remoteAddress, ByteBuf buf) throws Exception {
 
         int length = buf.readUnsignedByte();
@@ -461,7 +496,8 @@ public class Gt06ProtocolDecoder extends BaseProtocolDecoder {
             position.set(Position.KEY_CHARGE, BitUtil.check(status, 2));
 
             if (buf.readableBytes() >= 2 + 6) {
-                position.set(Position.KEY_BATTERY, buf.readUnsignedShort() * 0.01);
+                double bat = buf.readUnsignedShort() * 0.01;
+                position.set(Position.KEY_BATTERY_LEVEL, getBatteryLevel(bat));
             }
             if (buf.readableBytes() >= 1 + 6) {
                 position.set(Position.KEY_RSSI, buf.readUnsignedByte());
