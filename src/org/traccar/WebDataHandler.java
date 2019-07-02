@@ -50,6 +50,7 @@ public class WebDataHandler extends BaseDataHandler {
     private final IdentityManager identityManager;
     private final ObjectMapper objectMapper;
     private final Client client;
+    private final RabbitMqSender rabbitMqSender;
 
     private final String url;
     private final boolean json;
@@ -67,6 +68,7 @@ public class WebDataHandler extends BaseDataHandler {
         this.client = client;
         this.url = url;
         this.json = json;
+        this.rabbitMqSender = new RabbitMqSender();
     }
 
     private static String formatSentence(Position position) {
@@ -151,11 +153,11 @@ public class WebDataHandler extends BaseDataHandler {
             String attributes = objectMapper.writeValueAsString(position.getAttributes());
             Device device = identityManager.getById(position.getDeviceId());
             Location location = new Location(position, device, attributes);
-             if (!RabbitMqSender.sendMessage(gson.toJson(location))) {
+             if (!rabbitMqSender.sendMessage(gson.toJson(location))) {
                 client.target(url).request().async().post(Entity.json(prepareJsonPayload(position)));
             }
         } else {
-              if (!RabbitMqSender.sendMessage(formatRequest(position))) {
+              if (!rabbitMqSender.sendMessage(formatRequest(position))) {
                 try {
                     client.target(formatRequest(position)).request().async().get();
                 } catch (UnsupportedEncodingException | JsonProcessingException e) {

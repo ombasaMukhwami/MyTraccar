@@ -44,6 +44,7 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
     public static final int MSG_POSITION = 0x80;
     public static final int MSG_POSITION_1 = 0x8B;
     public static final int MSG_LENGTH_TO_SEND = 0x05;
+    public static final int MSG_LENGTH_TO_8F = 0x8F;
 
     public byte verify(byte[] b) {
         byte a = 0;
@@ -97,7 +98,10 @@ public class Tr11ProtocolDecoder extends BaseProtocolDecoder {
 
             channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
             return null;
-        }  else { //if (type == MSG_POSITION_DATA || type == MSG_POSITION_DATA1 || type == MSG_POSITION || type == MSG_POSITION_1) {
+        }  else if (type == MSG_LENGTH_TO_8F) {
+            return null;
+
+        } else { //if (type == MSG_POSITION_DATA || type == MSG_POSITION_DATA1 || type == MSG_POSITION || type == MSG_POSITION_1) {
 
             String deviceId = getDeviceId(buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte(), buf.readUnsignedByte());
             //String deviceId =  ByteBufUtil.hexDump(buf.readSlice(4));

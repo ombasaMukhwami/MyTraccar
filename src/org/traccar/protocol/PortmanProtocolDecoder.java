@@ -5,10 +5,7 @@ import io.netty.channel.Channel;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.DeviceSession;
 import org.traccar.Protocol;
-import org.traccar.helper.Helper;
-import org.traccar.helper.Parser;
-import org.traccar.helper.PatternBuilder;
-import org.traccar.helper.UnitsConverter;
+import org.traccar.helper.*;
 import org.traccar.model.Position;
 
 
@@ -41,7 +38,7 @@ public class PortmanProtocolDecoder extends BaseProtocolDecoder {
             .number("(d+),")              //course     128
             .expression("(.+),")          //           NA
             .expression("(.+),")          //status     4E000816
-            .number("(d+),")              //Event Id   110
+            .expression("(.+),")              //Event Id   110
             .expression("(.+),")          //           GNA
            // .text("CFG:")               //           CFG:
            // .number("(d+.d+)")            //           0.00
@@ -78,10 +75,15 @@ public class PortmanProtocolDecoder extends BaseProtocolDecoder {
         position.setSpeed(UnitsConverter.knotsFromKph(parser.nextInt(0)));
         position.setCourse(parser.nextInt(0));
         parser.next();
-        String deviceStatus = Helper.toBinary(Integer.parseInt(parser.next(),  16),  32);
+        int status = Integer.parseInt(parser.next(), 16);
+        String deviceStatus = Helper.toBinary(status,  32);
         int ignition = Integer.parseInt(deviceStatus.substring(14, 15));
+        position.set(Position.KEY_STATUS, status);
         position.set(Position.KEY_IGNITION, ignition > 0);
-        position.set(Position.KEY_EVENT, parser.nextInt());
+        position.set(Position.KEY_EVENT, parser.next());
+
+
+
 
         return position;
     }

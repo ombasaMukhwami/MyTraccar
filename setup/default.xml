@@ -56,7 +56,6 @@
     <entry key='database.saveOriginal'>true</entry> <!--Boolean flag to save original message from device in HEX format in position attributes.-->
     <entry key='database.changelog'>./schema/changelog-master.xml</entry>
     <entry key='database.loginUser'>
-
         SELECT * FROM tc_users
         WHERE email = :email OR login = :email
     </entry>
@@ -89,7 +88,22 @@
         SELECT * FROM tc_statistics WHERE captureTime BETWEEN :from AND :to ORDER BY captureTime
     </entry>
 
-    <!-- Navigate -->
+    <!-- RabbitMQ Configs -->
+    <entry key='rabbitMq.hostname'>localhost</entry>
+    <entry key='rabbitMq.username'>whitelabeltracking</entry>
+    <entry key='rabbitMq.password'>WltC0ntr0l</entry>
+    <entry key='rabbitMq.queue'>Q_NAVIGATE</entry>
+    <entry key='rabbitMq.exchange'>EX_NAVIGATE</entry>
+    <entry key='rabbitMq.routingKey'>traccar</entry>
+    <entry key='rabbitMq.durable'>true</entry>
+    <!--
+        <entry key='rabbitMq.virtualHost'>traccar</entry>
+        <entry key='rabbitMq.port'>0</entry>
+     -->
+
+
+
+     <!-- Navigate -->
 
     <entry key='sinotrack.port'>3299</entry>
     <entry key='queclink.port'>13979</entry>

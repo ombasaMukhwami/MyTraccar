@@ -16,8 +16,9 @@ public class JsonTypeEventForwarder extends EventForwarder {
     @Override
     protected void executeRequest(Event event, Position position, Set<Long> users, AsyncInvoker invoker) {
         Gson gson = new Gson();
+        RabbitMqSender sender =new RabbitMqSender();
         NavigateEvent navigateEvent = new NavigateEvent(event, position);
-         if (!RabbitMqSender.sendMessage(gson.toJson(navigateEvent))) {
+         if (!sender.sendMessage(gson.toJson(navigateEvent))) {
              invoker.post(Entity.json(preparePayload(event, position, users)));
          }
     }
